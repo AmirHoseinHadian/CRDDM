@@ -86,7 +86,7 @@ def response_pdf(theta, threshold, drift_vec):
     return 0.5/np.pi * np.exp(kappa * np.cos(theta - drift_angle)) / iv(0, kappa)
 
 @jit(nopython=True)
-def joint_lpdf(rt, theta, threshold, drift_vec, ndt, sigma=1):
+def joint_lpdf(rt, theta, threshold, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1):
     tt = np.maximum(rt - ndt, 0)
     s = tt/threshold**2
     
@@ -98,18 +98,33 @@ def joint_lpdf(rt, theta, threshold, drift_vec, ndt, sigma=1):
     fpt_lt = long_t_fpt_z(tt, threshold, sigma=sigma)
     fpt_st = 1/threshold**2 * short_t_fpt_z(tt/threshold**2, 0.1**8/threshold**2)   
     fpt_z =  (1 - w) * fpt_st + w * fpt_lt
-    
     fpt_z = np.maximum(fpt_z, 0.1**14)
 
-    mu_dot_x0 = drift_vec[0]*np.cos(theta)
-    mu_dot_x1 = drift_vec[1]*np.sin(theta)
 
-    term1 = threshold * (mu_dot_x0 + mu_dot_x1)
-    term2 = 0.5 * (drift_vec[0]**2+ drift_vec[1]**2) * tt
+    # Girsanov: no drift variability
+    if s_v == 0:
+        mu_dot_x0 = drift_vec[0]*np.cos(theta)
+        mu_dot_x1 = drift_vec[1]*np.sin(theta)
 
-    log_density = term1 - term2 + np.log(fpt_z) - np.log(2*np.pi)
-    
-    log_density[rt - ndt < 0] = np.log(0.1**14)
+        term1 = threshold * (mu_dot_x0 + mu_dot_x1)
+        term2 = 0.5 * (drift_vec[0]**2+ drift_vec[1]**2) * tt
+
+        log_density = term1 - term2 + np.log(fpt_z) - np.log(2*np.pi)
+    else:
+        s_v2 = s_v**2
+        x0 =  threshold*np.cos(theta)
+        x1 =  threshold*np.sin(theta)
+        fixed = 1/(np.sqrt(s_v2 * tt + 1))
+        exponent0 = -0.5*drift_vec[0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[0])**2 / (s_v2 * (s_v2 * tt + 1))
+        exponent1 = -0.5*drift_vec[1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[1])**2 / (s_v2 * (s_v2 * tt + 1))
+        # term1 = fixed * np.exp(exponent0)
+        # term2 = fixed * np.exp(exponent1)
+        
+        # # the joint density of choice and RT for the full process
+        # density = term1 * term2 * fpt_z
+        log_density = 2*np.log(fixed) + exponent0 + exponent1 + np.log(fpt_z) - np.log(2*np.pi)
+
+    log_density[rt - ndt <= 0] = np.log(0.1**14)
     log_density = np.maximum(log_density, np.log(0.1**14))
         
     return log_density
