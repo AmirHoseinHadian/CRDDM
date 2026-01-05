@@ -37,8 +37,8 @@ def simulate_CDM_trial(threshold, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1, 
         mu_t = drift_vec + s_v*np.random.randn(2)
     else:
         mu_t = drift_vec
-    
-    while np.sqrt(x[0]**2 + x[1]**2) < threshold_t:
+
+    while np.linalg.norm(x) < threshold_t:
         x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(2)
         rt += dt
     
