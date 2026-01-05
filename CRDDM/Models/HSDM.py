@@ -2,13 +2,24 @@ import numpy as np
 import pandas as pd
 from numba import jit
 
+from scipy.special import jv, iv
+from scipy.special import jn_zeros
+
+zeros = jn_zeros(1, 100)
+JVZ = jv(2, zeros)
+
 @jit(nopython=True)
 def simulate_HSDM_trial(threshold, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1, dt=0.001):
     '''
     input:
         threshold: a positive floating number
-        drift_vec: drift vector; a two-dimensional array
+        drift_vec: drift vector; a four-dimensional array
         ndt: a positive floating number
+        s_v: standard deviation of drift rate variability
+        s_a: range of threshold variability
+        s_t: range of non-decision time variability
+        sigma: standard deviation of the diffusion process
+        dt: time step for the simulation
     returns:
         rt: response time
         theta: response angle between [-pi, pi]
