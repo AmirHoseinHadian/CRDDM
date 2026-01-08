@@ -3,8 +3,20 @@ import pandas as pd
 from numba import jit
 from scipy.special import iv
 
-from CRDDM.utility.Constants import zeros_0 as zeros
-from CRDDM.utility.Constants import JVZ1 as JVZ
+from CRDDM.utility.CDM_fpt import short_t_fpt_z, long_t_fpt_z, ie_fpt
+
+
+def simulate_CBCDM_trial(threshold, drift_vec, ndt, sigma=1, dt=0.001):
+    x = np.zeros(2)
+    
+    rt = 0
+    while np.linalg.norm(x, 2) < threshold(rt):
+        x += drift_vec*dt + sigma*np.sqrt(dt)*np.random.randn(2)
+        rt += dt
+    
+    theta = np.arctan2(x[1], x[0])   
+    
+    return ndt+rt, theta
 
 @jit(nopython=True)
 def simulate_CDM_trial(threshold, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1, dt=0.001):
@@ -48,32 +60,17 @@ def simulate_CDM_trial(threshold, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1, 
     theta = np.arctan2(x[1], x[0]) 
     return ndt_t+rt, theta
 
-# The firs-passage time distribution of zero-drift process for small RTs
-@jit(nopython=True)
-def short_t_fpt_z(t, x):
-    term1 = ((1 - x)*(1 + t)**2) / (np.sqrt(x + t) * t**1.5)
-    term2 = np.exp(-.5*(1-x)**2/t -  0.5*zeros[0]**2*t)
-    return term1*term2
-
-# The firs-passage time distribution of zero-drift process
-@jit(nopython=True)
-def long_t_fpt_z(t, threshold, sigma=1):
-    fpt_z = np.zeros(t.shape)
-    for i in range(t.shape[0]):
-        series = np.sum((zeros/JVZ) * np.exp(-(zeros**2 * sigma**2)/(2*threshold**2)*t[i]))
-        fpt_z[i] = sigma**2/threshold**2 * series
-    return fpt_z
 
 class CDM:
     '''
-    Circular Diffusion Model
+    Circular Diffusion Model with fixed boundaries
     '''
 
     def __init__(self):
-        self.name = 'CDM'
+        self.name = 'Circular Diffusion Model with fixed boundaries'
 
 
-    def rng(self, threshold, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1, dt=0.001, n_sample=1):    
+    def simulate(self, threshold, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1, dt=0.001, n_sample=1):    
         RT = np.empty((n_sample,))
         Choice = np.empty((n_sample,))
 
@@ -83,18 +80,17 @@ class CDM:
         
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response'])
 
-    def response_time_pdf(self, t, threshold, drift_vec, sigma=1):
-        kappa = threshold * np.linalg.norm(drift_vec)
-        normalized_term = iv(0, kappa)
-        girsanov_term = np.exp(-0.5 * (drift_vec[0]**2+ drift_vec[1]**2) * t)
-        zero_drift_fpt = long_t_fpt_z(t, threshold, sigma=sigma)
-        return normalized_term * girsanov_term * zero_drift_fpt
+    # def response_time_pdf(self, t, threshold, drift_vec, sigma=1):
+    #     kappa = threshold * np.linalg.norm(drift_vec)
+    #     normalized_term = iv(0, kappa)
+    #     girsanov_term = np.exp(-0.5 * (drift_vec[0]**2+ drift_vec[1]**2) * t)
+    #     zero_drift_fpt = long_t_fpt_z(t, threshold, sigma=sigma)
+    #     return normalized_term * girsanov_term * zero_drift_fpt
 
-    def response_pdf(self,theta, threshold, drift_vec):
-        drift_angle = np.arctan2(drift_vec[1], drift_vec[0])
-        kappa = threshold * np.linalg.norm(drift_vec)
-        return 0.5/np.pi * np.exp(kappa * np.cos(theta - drift_angle)) / iv(0, kappa)
-
+    # def response_pdf(self,theta, threshold, drift_vec):
+    #     drift_angle = np.arctan2(drift_vec[1], drift_vec[0])
+    #     kappa = threshold * np.linalg.norm(drift_vec)
+    #     return 0.5/np.pi * np.exp(kappa * np.cos(theta - drift_angle)) / iv(0, kappa)
 
     def joint_lpdf(self, rt, theta, threshold, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1):
         tt = np.maximum(rt - ndt, 0)
@@ -135,3 +131,21 @@ class CDM:
         log_density = np.maximum(log_density, np.log(0.1**14))
             
         return log_density
+    
+
+class CollapsingThresholdCDM:
+    '''
+    Circular Diffusion Model with collapsing boundaries
+    '''
+
+    def __init__(self):
+        self.name = 'Circular Diffusion Model with collapsing boundaries'
+
+
+    def simulate(self, threshold, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1, dt=0.001, n_sample=1):
+        pass # To be implemented
+
+    def joint_lpdf(self, rt, theta, threshold_func, dthreshold_func, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1):
+        pass # To be implemented
+
+    
