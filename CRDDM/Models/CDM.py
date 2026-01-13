@@ -1,16 +1,27 @@
 import numpy as np
 import pandas as pd
 from numba import jit
-from scipy.special import iv
 
 from CRDDM.utility.CDM_fpt import short_t_fpt_z, long_t_fpt_z, ie_fpt
 
-
-def simulate_CBCDM_trial(threshold, drift_vec, ndt, sigma=1, dt=0.001):
+@jit(nopython=True)
+def simulate_CBCDM_trial(threshold, decay, drift_vec, ndt, sigma=1, dt=0.001):
+    '''
+    input:
+        threshold: a positive floating number
+        decay: boundary decay rate
+        drift_vec: drift vector; a two-dimensional array
+        ndt: a positive floating number
+        sigma: standard deviation of the diffusion process
+        dt: time step for the simulation
+    returns:
+        rt: response time
+        theta: response angle between [-pi, pi]
+    '''
     x = np.zeros(2)
     
     rt = 0
-    while np.linalg.norm(x, 2) < threshold(rt):
+    while np.linalg.norm(x, 2) < threshold - decay*rt:
         x += drift_vec*dt + sigma*np.sqrt(dt)*np.random.randn(2)
         rt += dt
     
@@ -142,10 +153,38 @@ class CollapsingThresholdCDM:
         self.name = 'Circular Diffusion Model with collapsing boundaries'
 
 
-    def simulate(self, threshold, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1, dt=0.001, n_sample=1):
-        pass # To be implemented
+    def simulate(self, threshold, decay, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):
+        RT = np.empty((n_sample,))
+        Choice = np.empty((n_sample,))
 
-    def joint_lpdf(self, rt, theta, threshold_func, dthreshold_func, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1):
-        pass # To be implemented
+        for n in range(n_sample):
+            RT[n], Choice[n] = simulate_CBCDM_trial(threshold, decay, drift_vec.astype(np.float64), ndt, 
+                                                    sigma=sigma, dt=dt)
+        
+        return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response'])
+
+    def joint_lpdf(self, rt, theta, threshold, decay, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1):
+        tt = np.maximum(rt - ndt, 0)
+
+        T_max = min(rt.max(), threshold/decay)
+        g_z, T = ie_fpt(threshold, decay, 2, 0.000001, dt=0.02, T_max=T_max)
+        
+        fpt_z = np.interp(tt, T, g_z)
+        fpt_z = np.maximum(fpt_z, 0.1**14)
+
+        # Girsanov: no drift variability
+        if s_v == 0:
+            mu_dot_x0 = drift_vec[0]*np.cos(theta)
+            mu_dot_x1 = drift_vec[1]*np.sin(theta)
+
+            term1 = (threshold - decay*tt) * (mu_dot_x0 + mu_dot_x1)
+            term2 = 0.5 * (drift_vec[0]**2+ drift_vec[1]**2) * tt
+
+            log_density = term1 - term2 + np.log(fpt_z) - np.log(2*np.pi)
+
+        log_density[rt - ndt <= 0] = np.log(0.1**14)
+        log_density = np.maximum(log_density, np.log(0.1**14))
+            
+        return log_density
 
     

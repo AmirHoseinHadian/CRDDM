@@ -1,9 +1,7 @@
 import numpy as np
-import pandas as pd
 
 from numba import jit
-from scipy.special import iv, ive
-from scipy.interpolate import interp1d
+from CRDDM.utility.helpers import iv_numba, ive_numba
 
 from CRDDM.utility.Constants import zeros_0 as zeros
 from CRDDM.utility.Constants import JVZ1 as JVZ
@@ -25,47 +23,55 @@ def long_t_fpt_z(t, threshold, sigma=1):
     return fpt_z
 
 
-def k(a, da, t, q, sigma=2):
-    return 0.5 * (q - 0.5*sigma - da(t))
+@jit(nopython=False)
+def k(threshold, decay, t, q, sigma=2):
+    da = -2*decay * (threshold - decay*t)
+    return 0.5 * (q - 0.5*sigma - da)
 
-def psi(a, da, t, z, tau, q, sigma=2):
-    kk = k(a, da, t, q, sigma)
+@jit(nopython=False)
+def psi(threshold, decay, t, z, tau, q, sigma=2):
+    kk = k(threshold, decay, t, q, sigma)
     
-    if 2*np.sqrt(a(t)*z)/(sigma*(t-tau))<=700:
-        term1 = 1./(sigma*(t - tau)) * np.exp(- (a(t) + z)/(sigma*(t-tau)))
-        term2 = (a(t)/z)**(0.5*(q-sigma)/sigma)
-        term3 = da(t) - (a(t)/(t-tau)) + kk
-        term4 = iv(q/sigma-1, 2*np.sqrt(a(t)*z)/(sigma*(t-tau)))
-        term5 = (np.sqrt(a(t)*z)/(t-tau)) * iv(q/sigma, 2*np.sqrt(a(t)*z)/(sigma*(t-tau)))
+    a = (threshold - decay*t)**2
+    da = -2*decay * (threshold - decay*t)
+    
+    if 2*np.sqrt(a*z)/(sigma*(t-tau))<=700:
+        term1 = 1./(sigma*(t - tau)) * np.exp(- (a + z)/(sigma*(t-tau)))
+        term2 = (a/z)**(0.5*(q-sigma)/sigma)
+        term3 = da - (a/(t-tau)) + kk
+        term4 = iv_numba(q/sigma-1, 2*np.sqrt(a*z)/(sigma*(t-tau)))
+        term5 = (np.sqrt(a*z)/(t-tau)) * iv_numba(q/sigma, 2*np.sqrt(a*z)/(sigma*(t-tau)))
     else:
         term1 = 1./(sigma*(t - tau))
-        term2 = (a(t)/z)**(0.5*(q-sigma)/sigma)
-        term3 = da(t) - (a(t)/(t-tau)) + kk
-        term4 = ive(q/sigma-1, (a(t) + z)/(sigma*(t-tau)))
-        term5 = (np.sqrt(a(t)*z)/(t-tau)) * ive(q/sigma, (a(t) + z)/(sigma*(t-tau)))
+        term2 = (a/z)**(0.5*(q-sigma)/sigma)
+        term3 = da - (a/(t-tau)) + kk
+        term4 = ive_numba(q/sigma-1, (a + z)/(sigma*(t-tau)))
+        term5 = (np.sqrt(a*z)/(t-tau)) * ive_numba(q/sigma, (a + z)/(sigma*(t-tau)))
     
     return term1 * term2 * (term3 * term4 + term5)
 
-def ie_fpt(a, da, q, z, sigma=2, dt=0.1, T_max=2):
-    g = [0]
-    T = [0]
-    g.append(-2*psi(a, da, dt, z, 0, q, sigma))
-    T.append(dt)
+@jit(nopython=False)
+def ie_fpt(threshold, decay, q, z, sigma=2, dt=0.1, T_max=2):
+    g = np.zeros((int(T_max/dt)+2,))
+    T = np.zeros((int(T_max/dt)+2,))
+    if threshold - decay*dt > 0:
+        g[1] = -2*psi(threshold, decay, dt, z, 0, q, sigma)
+    T[1] = dt
     
     for n in range(2, int(T_max/dt)+2):
-        s = -2 * psi(a, da, n*dt, z, 0, q, sigma)
+        if threshold - decay*(n*dt) <= 0:
+            T[n] = n*dt
+            continue
+        
+        s = -2 * psi(threshold, decay, n*dt, z, 0, q, sigma)
 
         for j in range(1, n):
-            if a(j*dt) == 0:
+            if threshold - decay*(j*dt) <= 0:
                 continue
             
-            s += 2 * dt * g[j] * psi(a, da, n*dt, a(j*dt), j*dt, q, sigma)
+            s += 2 * dt * g[j] * psi(threshold, decay, n*dt, (threshold - decay*(j*dt))**2, j*dt, q, sigma)
 
-        g.append(s)
-        T.append(n*dt)
-        
-    g = np.asarray(g)
-    T = np.asarray(T)
-    
-    gt = interp1d(T, g)
-    return gt
+        g[n] = s
+        T[n] = n*dt
+
+    return g, T
