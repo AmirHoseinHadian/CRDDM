@@ -106,3 +106,22 @@ def joint_lpdf(rt, theta, threshold, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=
     log_density = np.maximum(log_density, np.log(0.1**14))
         
     return log_density
+
+
+
+class CollapsingThresholdSDM:
+    def __init__(self):
+        self.name = 'Spherical Diffusion Model with collapsing boundaries'
+    
+    def simulate(self, threshold, decay, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):
+        RT = np.empty((n_sample,))
+        Choice = np.empty((n_sample, 2))
+
+        for n in range(n_sample):
+            RT[n], Choice[n, :] = simulate_SDM_trial(threshold, drift_vec.astype(np.float64), ndt, 
+                                                     s_v=s_v, s_a=0, s_t=s_t, sigma=sigma, dt=dt)
+        
+        return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response1', 'response2'])
+
+    def joint_lpdf(self, rt, theta, threshold, decay, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1):
+        pass # to be implemented later
