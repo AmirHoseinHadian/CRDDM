@@ -4,7 +4,7 @@ import pandas as pd
 from CRDDM.utility.simulators import simulate_CDM_trial
 from CRDDM.utility.fpts import cdm_short_t_fpt_z, cdm_long_t_fpt_z, ie_fpt
 
-class CDM:
+class FixedThresholdCDM:
     '''
     Circular Diffusion Model with fixed boundaries
     '''
