@@ -5,39 +5,14 @@ from numba import jit
 from CRDDM.utility.CDM_fpt import short_t_fpt_z, long_t_fpt_z, ie_fpt
 
 @jit(nopython=True)
-def simulate_CBCDM_trial(threshold, decay, drift_vec, ndt, sigma=1, dt=0.001):
-    '''
-    input:
-        threshold: a positive floating number
-        decay: boundary decay rate
-        drift_vec: drift vector; a two-dimensional array
-        ndt: a positive floating number
-        sigma: standard deviation of the diffusion process
-        dt: time step for the simulation
-    returns:
-        rt: response time
-        theta: response angle between [-pi, pi]
-    '''
-    x = np.zeros(2)
-    
-    rt = 0
-    while np.linalg.norm(x, 2) < threshold - decay*rt:
-        x += drift_vec*dt + sigma*np.sqrt(dt)*np.random.randn(2)
-        rt += dt
-    
-    theta = np.arctan2(x[1], x[0])   
-    
-    return ndt+rt, theta
-
-@jit(nopython=True)
-def simulate_CDM_trial(threshold, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1, dt=0.001):
+def simulate_CDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
     '''
     input:
         threshold: a positive floating number
         drift_vec: drift vector; a two-dimensional array
         ndt: a positive floating number
+        decay: decay rate of the collapsing boundary
         s_v: standard deviation of drift rate variability
-        s_a: range of threshold variability
         s_t: range of non-decision time variability
         sigma: standard deviation of the diffusion process
         dt: time step for the simulation
@@ -49,11 +24,6 @@ def simulate_CDM_trial(threshold, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1, 
     
     rt = 0
 
-    if s_a>0:
-        threshold_t = threshold + (2*s_a*np.random.rand() - s_a)
-    else:
-        threshold_t = threshold
-
     if s_t>0:
         ndt_t = ndt + (2*s_t*np.random.rand() - s_t)
     else:
@@ -64,7 +34,7 @@ def simulate_CDM_trial(threshold, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1, 
     else:
         mu_t = drift_vec
 
-    while np.linalg.norm(x) < threshold_t:
+    while np.linalg.norm(x) < threshold - decay*rt:
         x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(2)
         rt += dt
     
@@ -81,13 +51,13 @@ class CDM:
         self.name = 'Circular Diffusion Model with fixed boundaries'
 
 
-    def simulate(self, threshold, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1, dt=0.001, n_sample=1):    
+    def simulate(self, threshold, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):    
         RT = np.empty((n_sample,))
         Choice = np.empty((n_sample,))
 
         for n in range(n_sample):
             RT[n], Choice[n] = simulate_CDM_trial(threshold, drift_vec.astype(np.float64), ndt, 
-                                                  s_v=s_v, s_a=s_a, s_t=s_t, sigma=sigma, dt=dt)
+                                                  s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
         
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response'])
 
@@ -158,12 +128,12 @@ class CollapsingThresholdCDM:
         Choice = np.empty((n_sample,))
 
         for n in range(n_sample):
-            RT[n], Choice[n] = simulate_CBCDM_trial(threshold, decay, drift_vec.astype(np.float64), ndt, 
-                                                    sigma=sigma, dt=dt)
+            RT[n], Choice[n] = simulate_CDM_trial(threshold, drift_vec.astype(np.float64), ndt, decay=decay, 
+                                                  s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
         
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response'])
 
-    def joint_lpdf(self, rt, theta, threshold, decay, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1):
+    def joint_lpdf(self, rt, theta, threshold, decay, drift_vec, ndt, s_v=0, s_t=0, sigma=1):
         tt = np.maximum(rt - ndt, 0)
 
         T_max = min(rt.max(), threshold/decay)
