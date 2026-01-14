@@ -1,46 +1,8 @@
 import numpy as np
 import pandas as pd
-from numba import jit
 
+from CRDDM.utility.simulators import simulate_CDM_trial
 from CRDDM.utility.fpts import cdm_short_t_fpt_z, cdm_long_t_fpt_z, ie_fpt
-
-@jit(nopython=True)
-def simulate_CDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
-    '''
-    input:
-        threshold: a positive floating number
-        drift_vec: drift vector; a two-dimensional array
-        ndt: a positive floating number
-        decay: decay rate of the collapsing boundary
-        s_v: standard deviation of drift rate variability
-        s_t: range of non-decision time variability
-        sigma: standard deviation of the diffusion process
-        dt: time step for the simulation
-    returns:
-        rt: response time
-        theta: response angle between [-pi, pi]
-    '''
-    x = np.zeros((2,))
-    
-    rt = 0
-
-    if s_t>0:
-        ndt_t = ndt + (2*s_t*np.random.rand() - s_t)
-    else:
-        ndt_t = ndt
-
-    if s_v>0:
-        mu_t = drift_vec + s_v*np.random.randn(2)
-    else:
-        mu_t = drift_vec
-
-    while np.linalg.norm(x) < threshold - decay*rt:
-        x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(2)
-        rt += dt
-    
-    theta = np.arctan2(x[1], x[0]) 
-    return ndt_t+rt, theta
-
 
 class CDM:
     '''
