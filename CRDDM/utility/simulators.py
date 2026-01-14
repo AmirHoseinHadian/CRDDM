@@ -78,6 +78,7 @@ def simulate_SDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma=1
 
     return ndt_t+rt, (theta1, theta2)
 
+
 @jit(nopython=True)
 def simulate_HSDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
     '''
@@ -167,3 +168,22 @@ def simulate_PSDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma=
     theta = np.arctan2(np.sqrt(x[0]**2 + x[1]**2), x[2])    
     
     return ndt_t+rt, theta
+
+
+@jit(nopython=True)
+def simulate_PHSDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
+    '''
+    input:
+        threshold: a positive floating number
+        drift_vec: drift vector; a three-dimensional array
+        ndt: a positive floating number
+        decay: decay rate of the collapsing boundary
+        s_v: standard deviation of drift rate variability
+        s_t: range of non-decision time variability
+        sigma: standard deviation of the diffusion process
+        dt: time step for the simulation
+    returns:
+        rt: response time in seconds
+        theta: response angle between [0, pi]
+    '''
+    pass  # to be implemented later

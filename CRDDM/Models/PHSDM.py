@@ -1,26 +1,28 @@
 import numpy as np
 import pandas as pd
-from numba import jit
 
-@jit(nopython=True)
-def simulate_PHSDM_trial(threshold, ndt, mu, sigma=1, dt=0.001):
-    x = np.zeros((4,))
-    muz = mu[0]
-    eta = mu[1]
+from CRDDM.utility.simulators import simulate_PSDM_trial
+from CRDDM.utility.fpts import hsdm_short_t_fpt_z, hsdm_long_t_fpt_z, ie_fpt
+
+class fixedThresholdPHSDM:
+    '''
+    Hyper-Spherical Diffusion Model with fixed boundaries
+    '''
+
+    def __init__(self):
+        self.name = 'Hyper-Spherical Diffusion Model with fixed boundaries'
+
+    def simulate(self, threshold, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):    
+        pass  # to be implemented later
+    def joint_lpdf(self, rt, theta, threshold, drift_vec, ndt, s_v=0, s_t=0, sigma=1):
+        pass  # to be implemented later
+
+class collapsingThresholdPHSDM:
+    def __init__(self):
+        self.name = 'Hyper-Spherical Diffusion Model with collapsing boundaries'
     
-    norm_mu = np.sqrt(eta**2 + muz**2)
-    theta_mu = np.arctan2(eta, muz)
+    def simulate(self, threshold, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):    
+        pass  # to be implemented later
     
-    rt = 0
-    rphi = np.pi/4 # it is not important (just a dummpy value)
-    mux = norm_mu * np.sin(theta_mu) * np.cos(rphi)
-    muy = norm_mu * np.sin(theta_mu) * np.sin(rphi)
-    while np.sqrt(x[0]**2 + x[1]**2 + x[2]**2) < threshold:
-        x[0] += mux*dt + sigma*np.sqrt(dt)*np.random.normal(0, 1)
-        x[1] += muy*dt + sigma*np.sqrt(dt)*np.random.normal(0, 1)
-        x[2] += muz*dt + sigma*np.sqrt(dt)*np.random.normal(0, 1)
-        
-        rt += dt
-    theta = np.arctan2(np.sqrt(x[0]**2 + x[1]**2), x[2])    
-    
-    return rt+ndt, theta
+    def joint_lpdf(self, rt, theta, threshold, drift_vec, ndt, s_v=0, s_t=0, sigma=1):
+        pass  # to be implemented later
