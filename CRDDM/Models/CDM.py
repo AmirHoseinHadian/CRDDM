@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from numba import jit
 
-from CRDDM.utility.CDM_fpt import short_t_fpt_z, long_t_fpt_z, ie_fpt
+from CRDDM.utility.fpts import cdm_short_t_fpt_z, cdm_long_t_fpt_z, ie_fpt
 
 @jit(nopython=True)
 def simulate_CDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
@@ -82,8 +82,8 @@ class CDM:
         w = np.minimum(np.maximum((s - s0) / (s1 - s0), 0), 1)
         
         # first-passage time density of zero drift process
-        fpt_lt = long_t_fpt_z(tt, threshold, sigma=sigma)
-        fpt_st = 1/threshold**2 * short_t_fpt_z(tt/threshold**2, 0.1**8/threshold**2)   
+        fpt_lt = cdm_long_t_fpt_z(tt, threshold, sigma=sigma)
+        fpt_st = 1/threshold**2 * cdm_short_t_fpt_z(tt/threshold**2, 0.1**8/threshold**2)   
         fpt_z =  (1 - w) * fpt_st + w * fpt_lt
         fpt_z = np.maximum(fpt_z, 0.1**14)
 

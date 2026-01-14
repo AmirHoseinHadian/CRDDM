@@ -8,18 +8,34 @@ from CRDDM.utility.Constants import JVZ1 as JVZ
 
 # The firs-passage time distribution of zero-drift process for small RTs
 @jit(nopython=True)
-def short_t_fpt_z(t, x):
+def cdm_short_t_fpt_z(t, x):
     term1 = ((1 - x)*(1 + t)**2) / (np.sqrt(x + t) * t**1.5)
     term2 = np.exp(-.5*(1-x)**2/t -  0.5*zeros[0]**2*t)
     return term1*term2
 
 # The firs-passage time distribution of zero-drift process
 @jit(nopython=True)
-def long_t_fpt_z(t, threshold, sigma=1):
+def cdm_long_t_fpt_z(t, threshold, sigma=1):
     fpt_z = np.zeros(t.shape)
     for i in range(t.shape[0]):
         series = np.sum((zeros/JVZ) * np.exp(-(zeros**2 * sigma**2)/(2*threshold**2)*t[i]))
         fpt_z[i] = sigma**2/threshold**2 * series
+    return fpt_z
+
+# The firs-passage time distribution of zero-drift process for small RTs
+@jit(nopython=True)
+def sdm_short_t_fpt_z(t, x):
+    term1 = ((1 - x)*(1 + t)**2.5) / ((x + t) * t**1.5)
+    term2 = np.exp(-.5*(1-x)**2/t -  0.5*np.pi**2*t)
+    return term1*term2
+
+# The firs-passage time distribution of zero-drift process
+@jit(nopython=True)
+def sdm_long_t_fpt_z(t, threshold, sigma=1, max_n=500):
+    fpt_z = np.zeros(t.shape)
+    for n in range(1, max_n):
+        s = (-1)**(n+1) * n**2 * np.exp(- (n**2 * np.pi**2 * t)/(2*threshold**2))
+        fpt_z += np.pi**2/threshold**2 * s
     return fpt_z
 
 
