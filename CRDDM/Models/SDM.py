@@ -25,9 +25,10 @@ class FixedThresholdSDM:
 
     def response_time_pdf(self, t, threshold, drift_vec, sigma=1):
         kappa = threshold * np.linalg.norm(drift_vec)
-        normalized_term = iv(0, kappa)
+        normalized_term = np.sinh(kappa)/kappa
         girsanov_term = np.exp(-0.5 * (drift_vec[0]**2 + drift_vec[1]**2 + drift_vec[2]**2) * t)
         zero_drift_fpt = sdm_long_t_fpt_z(t, threshold, sigma=sigma)
+        # d, tt = fpts.ie_fpt(threshold, 0, 3, 0.00001, T_max=df['rt'].max(), dt=0.02)
         return normalized_term * girsanov_term * zero_drift_fpt
     
     def joint_lpdf(self, rt, theta, threshold, drift_vec, ndt, s_v=0, s_t=0, sigma=1):

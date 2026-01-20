@@ -35,7 +35,7 @@ def hsdm_long_t_fpt_z(t, threshold, sigma=1):
     fpt_z = np.zeros(t.shape)
     for i in range(t.shape[0]):
         series = np.sum((zeros_1**2/JVZ2) * np.exp(-(zeros_1**2 * sigma**2)/(2*threshold**2)*t[i]))
-        fpt_z[i] = 0.5*sigma**2/threshold**2 * series
+        fpt_z[i] = sigma**2/(threshold**2) * series
     return fpt_z
 
 # The firs-passage time distribution of zero-drift process for small RTs
