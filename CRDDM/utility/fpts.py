@@ -56,13 +56,13 @@ def sdm_long_t_fpt_z(t, threshold, sigma=1, max_n=500):
 
 
 @jit(nopython=False)
-def k(threshold, decay, t, q, sigma=2):
+def k_linear(threshold, decay, t, q, sigma=2):
     da = -2*decay * (threshold - decay*t)
     return 0.5 * (q - 0.5*sigma - da)
 
 @jit(nopython=False)
-def psi(threshold, decay, t, z, tau, q, sigma=2):
-    kk = k(threshold, decay, t, q, sigma)
+def psi_linear(threshold, decay, t, z, tau, q, sigma=2):
+    kk = k_linear(threshold, decay, t, q, sigma)
     
     a = (threshold - decay*t)**2
     da = -2*decay * (threshold - decay*t)
@@ -83,25 +83,116 @@ def psi(threshold, decay, t, z, tau, q, sigma=2):
     return term1 * term2 * (term3 * term4 + term5)
 
 @jit(nopython=False)
-def ie_fpt(threshold, decay, q, z, sigma=2, dt=0.1, T_max=2):
+def ie_fpt_linear(threshold, decay, q, z, sigma=2, dt=0.1, T_max=2):
     g = np.zeros((int(T_max/dt)+2,))
     T = np.zeros((int(T_max/dt)+2,))
     if threshold - decay*dt > 0:
-        g[1] = -2*psi(threshold, decay, dt, z, 0, q, sigma)
+        g[1] = -2*psi_linear(threshold, decay, dt, z, 0, q, sigma)
     T[1] = dt
     
     for n in range(2, int(T_max/dt)+2):
         if threshold - decay*(n*dt) <= 0:
             T[n] = n*dt
             continue
-        
-        s = -2 * psi(threshold, decay, n*dt, z, 0, q, sigma)
+
+        s = -2 * psi_linear(threshold, decay, n*dt, z, 0, q, sigma)
 
         for j in range(1, n):
             if threshold - decay*(j*dt) <= 0:
                 continue
             
-            s += 2 * dt * g[j] * psi(threshold, decay, n*dt, (threshold - decay*(j*dt))**2, j*dt, q, sigma)
+            s += 2 * dt * g[j] * psi_linear(threshold, decay, n*dt, (threshold - decay*(j*dt))**2, j*dt, q, sigma)
+
+        g[n] = s
+        T[n] = n*dt
+
+    return g, T
+
+@jit(nopython=False)
+def k_exponential(threshold, decay, t, q, sigma=2):
+    da = -2*decay*threshold*np.exp(-decay*t) * (threshold * np.exp(-decay*t))
+    return 0.5 * (q - 0.5*sigma - da)
+
+@jit(nopython=False)
+def psi_exponential(threshold, decay, t, z, tau, q, sigma=2):
+    kk = k_exponential(threshold, decay, t, q, sigma)
+
+    a = (threshold * np.exp(-decay*t))**2
+    da = -2*decay*threshold*np.exp(-decay*t) * (threshold * np.exp(-decay*t))
+
+    if 2*np.sqrt(a*z)/(sigma*(t-tau))<=700:
+        term1 = 1./(sigma*(t - tau)) * np.exp(- (a + z)/(sigma*(t-tau)))
+        term2 = (a/z)**(0.5*(q-sigma)/sigma)
+        term3 = da - (a/(t-tau)) + kk
+        term4 = iv_numba(q/sigma-1, 2*np.sqrt(a*z)/(sigma*(t-tau)))
+        term5 = (np.sqrt(a*z)/(t-tau)) * iv_numba(q/sigma, 2*np.sqrt(a*z)/(sigma*(t-tau)))
+    else:
+        term1 = 1./(sigma*(t - tau))
+        term2 = (a/z)**(0.5*(q-sigma)/sigma)
+        term3 = da - (a/(t-tau)) + kk
+        term4 = ive_numba(q/sigma-1, (a + z)/(sigma*(t-tau)))
+        term5 = (np.sqrt(a*z)/(t-tau)) * ive_numba(q/sigma, (a + z)/(sigma*(t-tau)))
+    
+    return term1 * term2 * (term3 * term4 + term5)
+
+@jit(nopython=False)
+def ie_fpt_exponential(threshold, decay, q, z, sigma=2, dt=0.1, T_max=2):
+    g = np.zeros((int(T_max/dt)+2,))
+    T = np.zeros((int(T_max/dt)+2,))
+
+    g[1] = -2*psi_exponential(threshold, decay, dt, z, 0, q, sigma)
+    T[1] = dt
+    
+    for n in range(2, int(T_max/dt)+2):        
+        s = -2 * psi_exponential(threshold, decay, n*dt, z, 0, q, sigma)
+
+        for j in range(1, n):
+            s += 2 * dt * g[j] * psi_exponential(threshold, decay, n*dt, (threshold * np.exp(-decay*(j*dt)))**2, j*dt, q, sigma)
+
+        g[n] = s
+        T[n] = n*dt
+
+    return g, T
+
+@jit(nopython=False)
+def k_hyperbolic(threshold, decay, t, q, sigma=2):
+    da = -2*decay*threshold/(1 + decay*t)**2 * (threshold / (1 + decay*t))
+    return 0.5 * (q - 0.5*sigma - da)
+
+@jit(nopython=False)
+def psi_hyperbolic(threshold, decay, t, z, tau, q, sigma=2):
+    kk = k_hyperbolic(threshold, decay, t, q, sigma)
+
+    a = (threshold / (1 + decay*t))**2
+    da = -2*decay*threshold/(1 + decay*t)**2 * (threshold / (1 + decay*t))
+
+    if 2*np.sqrt(a*z)/(sigma*(t-tau))<=700:
+        term1 = 1./(sigma*(t - tau)) * np.exp(- (a + z)/(sigma*(t-tau)))
+        term2 = (a/z)**(0.5*(q-sigma)/sigma)
+        term3 = da - (a/(t-tau)) + kk
+        term4 = iv_numba(q/sigma-1, 2*np.sqrt(a*z)/(sigma*(t-tau)))
+        term5 = (np.sqrt(a*z)/(t-tau)) * iv_numba(q/sigma, 2*np.sqrt(a*z)/(sigma*(t-tau)))
+    else:
+        term1 = 1./(sigma*(t - tau))
+        term2 = (a/z)**(0.5*(q-sigma)/sigma)
+        term3 = da - (a/(t-tau)) + kk
+        term4 = ive_numba(q/sigma-1, (a + z)/(sigma*(t-tau)))
+        term5 = (np.sqrt(a*z)/(t-tau)) * ive_numba(q/sigma, (a + z)/(sigma*(t-tau)))
+    
+    return term1 * term2 * (term3 * term4 + term5)
+
+@jit(nopython=False)
+def ie_fpt_hyperbolic(threshold, decay, q, z, sigma=2, dt=0.1, T_max=2):
+    g = np.zeros((int(T_max/dt)+2,))
+    T = np.zeros((int(T_max/dt)+2,))
+
+    g[1] = -2*psi_hyperbolic(threshold, decay, dt, z, 0, q, sigma)
+    T[1] = dt
+    
+    for n in range(2, int(T_max/dt)+2):
+        s = -2 * psi_hyperbolic(threshold, decay, n*dt, z, 0, q, sigma)
+        for j in range(1, n):           
+            s += 2 * dt * g[j] * psi_hyperbolic(threshold, decay, n*dt, (threshold / (1 + decay*(j*dt)))**2, j*dt, q, sigma)
 
         g[n] = s
         T[n] = n*dt
