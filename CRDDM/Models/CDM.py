@@ -96,6 +96,14 @@ class CollapsingThresholdCDM:
         
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response'])
 
+    def response_time_pdf(self, t, threshold, decay, drift_vec, sigma=1):
+        kappa = (threshold - decay * t) * np.linalg.norm(drift_vec)
+        normalized_term = iv(0, kappa)
+        girsanov_term = np.exp(-0.5 * (drift_vec[0]**2+ drift_vec[1]**2) * t)
+        gz, T = ie_fpt(threshold, decay, 2, 0.000001, dt=0.02, T_max=t.max())
+        zero_drift_fpt = np.interp(t, T, gz)
+        return normalized_term * girsanov_term * zero_drift_fpt
+    
     def joint_lpdf(self, rt, theta, threshold, decay, drift_vec, ndt, s_v=0, s_t=0, sigma=1):
         tt = np.maximum(rt - ndt, 0)
 

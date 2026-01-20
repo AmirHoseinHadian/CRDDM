@@ -76,7 +76,7 @@ class FixedThresholdHSDM:
         return log_density
     
 
-class collapsingThresholdHSDM:
+class CollapsingThresholdHSDM:
     def __init__(self):
         self.name = 'Hyper-Spherical Diffusion Model with collapsing boundaries'
 
@@ -89,6 +89,16 @@ class collapsingThresholdHSDM:
                                                       decay=decay, s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
         
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response1', 'response2', 'response3'])
+    
+    def response_time_pdf(self, t, threshold, decay, drift_vec, sigma=1):
+        kappa = (threshold - decay * t) * np.linalg.norm(drift_vec)
+        normalized_term = 2*iv(1, kappa)/kappa
+        girsanov_term = np.exp(-0.5 * np.linalg.norm(drift_vec)**2 * t)
+
+        gz, T = ie_fpt(threshold, decay, 4, 0.000001, dt=0.02, T_max=t.max())
+        zero_drift_fpt = np.interp(t, T, gz)
+        
+        return normalized_term * girsanov_term * zero_drift_fpt
     
     def joint_lpdf(self, rt, theta, threshold, decay, drift_vec, ndt, s_v=0, s_t=0, sigma=1):
         tt = np.maximum(rt - ndt, 0)
