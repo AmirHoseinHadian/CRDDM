@@ -4,153 +4,11 @@ from scipy.special import iv
 
 from CRDDM.utility.simulators import simulate_CDM_trial
 from CRDDM.utility.fpts import cdm_short_t_fpt_z, cdm_long_t_fpt_z, ie_fpt_linear, ie_fpt_exponential, ie_fpt_hyperbolic
-
-class FixedThresholdCDM:
-    '''
-    Circular Diffusion Model with fixed boundaries
-    '''
-
-    def __init__(self):
-        self.name = 'Circular Diffusion Model with fixed boundaries'
-
-
-    def simulate(self, threshold, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):
-        '''
-        Simulate data from the Circular Diffusion Model with fixed boundaries
-        
-        Parameters
-        ----------
-        threshold : float
-            The decision threshold
-        drift_vec : array-like, shape (2,)
-            The drift vector [drift_x, drift_y]
-        ndt : float
-            The non-decision time
-        s_v : float, optional
-            The standard deviation of drift variability (default is 0)
-        s_t : float, optional
-            The standard deviation of non-decision time variability (default is 0)
-        sigma : float, optional
-            The diffusion coefficient (default is 1)
-        dt : float, optional
-            The time step for simulation (default is 0.001)
-        n_sample : int, optional
-            The number of samples to simulate (default is 1)
-            
-        Returns
-        -------
-        pd.DataFrame
-            A DataFrame containing simulated response times and choice angles
-        '''  
-        RT = np.empty((n_sample,))
-        Choice = np.empty((n_sample,))
-
-        for n in range(n_sample):
-            RT[n], Choice[n] = simulate_CDM_trial(threshold, drift_vec.astype(np.float64), ndt, 
-                                                  s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
-        
-        return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response'])
-
-    def response_time_pdf(self, t, threshold, drift_vec, sigma=1):
-        '''
-        Compute the response time probability density function for given parameters
-
-        Parameters
-        ----------
-        t : array-like
-            Response times at which to evaluate the PDF
-        threshold : float
-            The decision threshold
-        drift_vec : array-like, shape (2,)
-            The drift vector [drift_x, drift_y]
-        sigma : float, optional
-            The diffusion coefficient (default is 1)
-
-        Returns
-        -------
-        array-like
-            The response time PDF evaluated at times t
-        '''
-        kappa = threshold * np.linalg.norm(drift_vec)
-        normalized_term = iv(0, kappa)
-        girsanov_term = np.exp(-0.5 * (drift_vec[0]**2+ drift_vec[1]**2) * t)
-        zero_drift_fpt = cdm_long_t_fpt_z(t, threshold, sigma=sigma)
-        return normalized_term * girsanov_term * zero_drift_fpt
-
-    def joint_lpdf(self, rt, theta, threshold, drift_vec, ndt, s_v=0, s_t=0, sigma=1):
-        '''
-        Compute the joint log-probability density function of response time and choice angle
-        
-        Parameters
-        ----------
-        rt : array-like
-            Response times
-        theta : array-like
-            Choice angles in radians
-        threshold : float
-            The decision threshold
-        drift_vec : array-like, shape (2,)
-            The drift vector [drift_x, drift_y]
-        ndt : float
-            The non-decision time
-        s_v : float, optional
-            The standard deviation of drift variability (default is 0)
-        s_t : float, optional
-            The standard deviation of non-decision time variability (default is 0)
-        sigma : float, optional
-            The diffusion coefficient (default is 1)
-
-        Returns
-        -------
-        array-like
-            The joint log-probability density evaluated at (rt, theta) with same shape as rt and theta
-        '''
-        tt = np.maximum(rt - ndt, 0)
-        s = tt/threshold**2
-        
-        s0 = 0.002
-        s1 = 0.02
-        w = np.minimum(np.maximum((s - s0) / (s1 - s0), 0), 1)
-        
-        # first-passage time density of zero drift process
-        fpt_lt = cdm_long_t_fpt_z(tt, threshold, sigma=sigma)
-        fpt_st = 1/threshold**2 * cdm_short_t_fpt_z(tt/threshold**2, 0.1**8/threshold**2)   
-        fpt_z =  (1 - w) * fpt_st + w * fpt_lt
-        fpt_z = np.maximum(fpt_z, 0.1**14)
-
-
-        # Girsanov: 
-        if s_v == 0:
-            # No drift variability
-            mu_dot_x0 = drift_vec[0]*np.cos(theta)
-            mu_dot_x1 = drift_vec[1]*np.sin(theta)
-
-            term1 = threshold * (mu_dot_x0 + mu_dot_x1)
-            term2 = 0.5 * (drift_vec[0]**2+ drift_vec[1]**2) * tt
-
-            # The joint density of choice and RT
-            log_density = term1 - term2 + np.log(fpt_z) - np.log(2*np.pi)
-        else:
-            # With drift variability
-            s_v2 = s_v**2
-            x0 =  threshold*np.cos(theta)
-            x1 =  threshold*np.sin(theta)
-            fixed = 1/(np.sqrt(s_v2 * tt + 1))
-            exponent0 = -0.5*drift_vec[0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[0])**2 / (s_v2 * (s_v2 * tt + 1))
-            exponent1 = -0.5*drift_vec[1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[1])**2 / (s_v2 * (s_v2 * tt + 1))
-
-            # The joint density of choice and RT
-            log_density = 2*np.log(fixed) + exponent0 + exponent1 + np.log(fpt_z) - np.log(2*np.pi)
-
-        log_density[rt - ndt <= 0] = np.log(0.1**14)
-        log_density = np.maximum(log_density, np.log(0.1**14))
-            
-        return log_density
     
 
-class CollapsingThresholdCDM:
+class CircularDiffusionModel:
     '''
-    Circular Diffusion Model with collapsing boundaries
+    Circular Diffusion Model
     '''
 
     def __init__(self, threshold_dynamic='fixed'):
@@ -160,7 +18,7 @@ class CollapsingThresholdCDM:
         threshold_dynamic : str, optional
             The type of threshold collapse ('fixed', 'linear', 'exponential', or 'hyperbolic'), default is 'fixed'
         '''
-        self.name = 'Circular Diffusion Model with collapsing boundaries'
+        self.name = 'Circular Diffusion Model'
         self.threshold_dynamic = threshold_dynamic
 
 
@@ -229,11 +87,19 @@ class CollapsingThresholdCDM:
         kappa = (threshold - decay * t) * np.linalg.norm(drift_vec)
         normalized_term = iv(0, kappa)
         girsanov_term = np.exp(-0.5 * (drift_vec[0]**2+ drift_vec[1]**2) * t)
-        gz, T = ie_fpt(threshold, decay, 2, 0.000001, dt=0.02, T_max=t.max())
+        if self.threshold_dynamic == 'fixed':
+            gz, T = ie_fpt_exponential(threshold, 0, 2, 0.000001, dt=0.02, T_max=t.max())
+        elif self.threshold_dynamic == 'linear':
+            gz, T = ie_fpt_linear(threshold, decay, 2, 0.000001, dt=0.02, T_max=t.max())
+        elif self.threshold_dynamic == 'exponential':
+            gz, T = ie_fpt_exponential(threshold, decay, 2, 0.000001, dt=0.02, T_max=t.max())
+        elif self.threshold_dynamic == 'hyperbolic':
+            gz, T = ie_fpt_hyperbolic(threshold, decay, 2, 0.000001, dt=0.02, T_max=t.max())
+        
         zero_drift_fpt = np.interp(t, T, gz)
         return normalized_term * girsanov_term * zero_drift_fpt
 
-    def joint_lpdf_linear(self, rt, theta, drift_vec, ndt, threshold, decay=0, s_v=0, s_t=0, sigma=1):
+    def joint_lpdf(self, rt, theta, drift_vec, ndt, threshold, decay=0, s_v=0, s_t=0, sigma=1):
         '''
         Compute the joint log-probability density function of response time and choice angle
 
@@ -267,6 +133,7 @@ class CollapsingThresholdCDM:
 
         # first-passage time density of zero drift process
         if self.threshold_dynamic == 'fixed':
+            a = threshold
             s = tt/threshold**2
             s0 = 0.002
             s1 = 0.02
@@ -275,20 +142,20 @@ class CollapsingThresholdCDM:
             fpt_lt = cdm_long_t_fpt_z(tt, threshold, sigma=sigma)
             fpt_st = 1/threshold**2 * cdm_short_t_fpt_z(tt/threshold**2, 0.1**8/threshold**2)   
             fpt_z =  (1 - w) * fpt_st + w * fpt_lt
-            fpt_z = np.maximum(fpt_z, 0.1**14)
-            a = threshold
         elif self.threshold_dynamic == 'linear':
+            a = threshold - decay*tt
             T_max = min(rt.max(), threshold/decay)
             g_z, T = ie_fpt_linear(threshold, decay, 2, 0.000001, dt=0.02, T_max=T_max)
-            a = threshold - decay*tt
+            fpt_z = np.interp(tt, T, g_z)
         elif self.threshold_dynamic == 'exponential':
-            g_z, T = ie_fpt_exponential(threshold, decay, 2, 0.000001, dt=0.02, T_max=rt.max())
             a = threshold * np.exp(-decay*tt)
+            g_z, T = ie_fpt_exponential(threshold, decay, 2, 0.000001, dt=0.02, T_max=rt.max())
+            fpt_z = np.interp(tt, T, g_z)
         elif self.threshold_dynamic == 'hyperbolic':
-            g_z, T = ie_fpt_hyperbolic(threshold, decay, 2, 0.000001, dt=0.02, T_max=rt.max())
             a = threshold / (1 + decay*tt)
-        
-        fpt_z = np.interp(tt, T, g_z)
+            g_z, T = ie_fpt_hyperbolic(threshold, decay, 2, 0.000001, dt=0.02, T_max=rt.max())
+            fpt_z = np.interp(tt, T, g_z)
+
         fpt_z = np.maximum(fpt_z, 0.1**14)
 
         # Girsanov:
