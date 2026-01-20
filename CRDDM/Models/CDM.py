@@ -14,7 +14,34 @@ class FixedThresholdCDM:
         self.name = 'Circular Diffusion Model with fixed boundaries'
 
 
-    def simulate(self, threshold, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):    
+    def simulate(self, threshold, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):
+        '''
+        Simulate data from the Circular Diffusion Model with fixed boundaries
+        
+        Parameters
+        ----------
+        threshold : float
+            The decision threshold
+        drift_vec : array-like, shape (2,)
+            The drift vector [drift_x, drift_y]
+        ndt : float
+            The non-decision time
+        s_v : float, optional
+            The standard deviation of drift variability (default is 0)
+        s_t : float, optional
+            The standard deviation of non-decision time variability (default is 0)
+        sigma : float, optional
+            The diffusion coefficient (default is 1)
+        dt : float, optional
+            The time step for simulation (default is 0.001)
+        n_sample : int, optional
+            The number of samples to simulate (default is 1)
+            
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame containing simulated response times and choice angles
+        '''  
         RT = np.empty((n_sample,))
         Choice = np.empty((n_sample,))
 
@@ -25,18 +52,59 @@ class FixedThresholdCDM:
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response'])
 
     def response_time_pdf(self, t, threshold, drift_vec, sigma=1):
+        '''
+        Compute the response time probability density function for given parameters
+
+        Parameters
+        ----------
+        t : array-like
+            Response times at which to evaluate the PDF
+        threshold : float
+            The decision threshold
+        drift_vec : array-like, shape (2,)
+            The drift vector [drift_x, drift_y]
+        sigma : float, optional
+            The diffusion coefficient (default is 1)
+
+        Returns
+        -------
+        array-like
+            The response time PDF evaluated at times t
+        '''
         kappa = threshold * np.linalg.norm(drift_vec)
         normalized_term = iv(0, kappa)
         girsanov_term = np.exp(-0.5 * (drift_vec[0]**2+ drift_vec[1]**2) * t)
         zero_drift_fpt = cdm_long_t_fpt_z(t, threshold, sigma=sigma)
         return normalized_term * girsanov_term * zero_drift_fpt
 
-    # def response_pdf(self,theta, threshold, drift_vec):
-    #     drift_angle = np.arctan2(drift_vec[1], drift_vec[0])
-    #     kappa = threshold * np.linalg.norm(drift_vec)
-    #     return 0.5/np.pi * np.exp(kappa * np.cos(theta - drift_angle)) / iv(0, kappa)
+    def joint_lpdf(self, rt, theta, threshold, drift_vec, ndt, s_v=0, s_t=0, sigma=1):
+        '''
+        Compute the joint log-probability density function of response time and choice angle
+        
+        Parameters
+        ----------
+        rt : array-like
+            Response times
+        theta : array-like
+            Choice angles in radians
+        threshold : float
+            The decision threshold
+        drift_vec : array-like, shape (2,)
+            The drift vector [drift_x, drift_y]
+        ndt : float
+            The non-decision time
+        s_v : float, optional
+            The standard deviation of drift variability (default is 0)
+        s_t : float, optional
+            The standard deviation of non-decision time variability (default is 0)
+        sigma : float, optional
+            The diffusion coefficient (default is 1)
 
-    def joint_lpdf(self, rt, theta, threshold, drift_vec, ndt, s_v=0, s_a=0, s_t=0, sigma=1):
+        Returns
+        -------
+        array-like
+            The joint log-probability density evaluated at (rt, theta) with same shape as rt and theta
+        '''
         tt = np.maximum(rt - ndt, 0)
         s = tt/threshold**2
         
@@ -51,16 +119,19 @@ class FixedThresholdCDM:
         fpt_z = np.maximum(fpt_z, 0.1**14)
 
 
-        # Girsanov: no drift variability
+        # Girsanov: 
         if s_v == 0:
+            # No drift variability
             mu_dot_x0 = drift_vec[0]*np.cos(theta)
             mu_dot_x1 = drift_vec[1]*np.sin(theta)
 
             term1 = threshold * (mu_dot_x0 + mu_dot_x1)
             term2 = 0.5 * (drift_vec[0]**2+ drift_vec[1]**2) * tt
 
+            # The joint density of choice and RT
             log_density = term1 - term2 + np.log(fpt_z) - np.log(2*np.pi)
         else:
+            # With drift variability
             s_v2 = s_v**2
             x0 =  threshold*np.cos(theta)
             x1 =  threshold*np.sin(theta)
@@ -68,7 +139,7 @@ class FixedThresholdCDM:
             exponent0 = -0.5*drift_vec[0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[0])**2 / (s_v2 * (s_v2 * tt + 1))
             exponent1 = -0.5*drift_vec[1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[1])**2 / (s_v2 * (s_v2 * tt + 1))
 
-            # the joint density of choice and RT for the full process
+            # The joint density of choice and RT
             log_density = 2*np.log(fixed) + exponent0 + exponent1 + np.log(fpt_z) - np.log(2*np.pi)
 
         log_density[rt - ndt <= 0] = np.log(0.1**14)
@@ -87,6 +158,35 @@ class CollapsingThresholdCDM:
 
 
     def simulate(self, threshold, decay, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):
+        '''
+        Simulate data from the Circular Diffusion Model with collapsing boundaries
+
+        Parameters
+        ----------
+        threshold : float
+            The initial decision threshold
+        decay : float
+            The decay rate of the threshold
+        drift_vec : array-like, shape (2,)
+            The drift vector [drift_x, drift_y]
+        ndt : float
+            The non-decision time
+        s_v : float, optional
+            The standard deviation of drift variability (default is 0)
+        s_t : float, optional
+            The standard deviation of non-decision time variability (default is 0)
+        sigma : float, optional
+            The diffusion coefficient (default is 1)
+        dt : float, optional
+            The time step for simulation (default is 0.001)
+        n_sample : int, optional
+            The number of samples to simulate (default is 1)
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame containing simulated response times and choice angles
+        '''
         RT = np.empty((n_sample,))
         Choice = np.empty((n_sample,))
 
@@ -97,6 +197,27 @@ class CollapsingThresholdCDM:
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response'])
 
     def response_time_pdf(self, t, threshold, decay, drift_vec, sigma=1):
+        '''
+        Compute the response time probability density function for given parameters
+
+        Parameters
+        ----------
+        t : array-like
+            Response times at which to evaluate the PDF
+        threshold : float
+            The initial decision threshold
+        decay : float
+            The decay rate of the threshold
+        drift_vec : array-like, shape (2,)
+            The drift vector [drift_x, drift_y]
+        sigma : float, optional
+            The diffusion coefficient (default is 1)
+
+        Returns
+        -------
+        array-like
+            The response time PDF evaluated at times t
+        '''
         kappa = (threshold - decay * t) * np.linalg.norm(drift_vec)
         normalized_term = iv(0, kappa)
         girsanov_term = np.exp(-0.5 * (drift_vec[0]**2+ drift_vec[1]**2) * t)
@@ -105,6 +226,35 @@ class CollapsingThresholdCDM:
         return normalized_term * girsanov_term * zero_drift_fpt
     
     def joint_lpdf(self, rt, theta, threshold, decay, drift_vec, ndt, s_v=0, s_t=0, sigma=1):
+        '''
+        Compute the joint log-probability density function of response time and choice angle
+
+        Parameters
+        ----------
+        rt : array-like
+            Response times
+        theta : array-like
+            Choice angles in radians
+        threshold : float
+            The initial decision threshold
+        decay : float
+            The decay rate of the threshold
+        drift_vec : array-like, shape (2,)
+            The drift vector [drift_x, drift_y]
+        ndt : float
+            The non-decision time
+        s_v : float, optional
+            The standard deviation of drift variability (default is 0)
+        s_t : float, optional
+            The standard deviation of non-decision time variability (default is 0)
+        sigma : float, optional
+            The diffusion coefficient (default is 1)
+
+        Returns
+        -------
+        array-like
+            The joint log-probability density evaluated at (rt, theta) with same shape as rt and theta
+        '''
         tt = np.maximum(rt - ndt, 0)
 
         T_max = min(rt.max(), threshold/decay)
@@ -113,8 +263,9 @@ class CollapsingThresholdCDM:
         fpt_z = np.interp(tt, T, g_z)
         fpt_z = np.maximum(fpt_z, 0.1**14)
 
-        # Girsanov: no drift variability
+        # Girsanov:
         if s_v == 0:
+            # No drift variability
             mu_dot_x0 = drift_vec[0]*np.cos(theta)
             mu_dot_x1 = drift_vec[1]*np.sin(theta)
 
@@ -122,6 +273,16 @@ class CollapsingThresholdCDM:
             term2 = 0.5 * (drift_vec[0]**2+ drift_vec[1]**2) * tt
 
             log_density = term1 - term2 + np.log(fpt_z) - np.log(2*np.pi)
+        else:
+            # With drift variability            
+            s_v2 = s_v**2
+            x0 =  (threshold - decay*tt)*np.cos(theta)
+            x1 =  (threshold - decay*tt)*np.sin(theta)
+            fixed = 1/(np.sqrt(s_v2 * tt + 1))
+            exponent0 = -0.5*drift_vec[0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[0])**2 / (s_v2 * (s_v2 * tt + 1))
+            exponent1 = -0.5*drift_vec[1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[1])**2 / (s_v2 * (s_v2 * tt + 1))
+
+            log_density = 2*np.log(fixed) + exponent0 + exponent1 + np.log(fpt_z) - np.log(2*np.pi)
 
         log_density[rt - ndt <= 0] = np.log(0.1**14)
         log_density = np.maximum(log_density, np.log(0.1**14))
