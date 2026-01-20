@@ -153,8 +153,15 @@ class CollapsingThresholdCDM:
     Circular Diffusion Model with collapsing boundaries
     '''
 
-    def __init__(self):
+    def __init__(self, threshold_dynamic='linear'):
+        '''
+        Parameters
+        ----------
+        threshold_dynamic : str, optional
+            The type of threshold collapse ('linear', 'exponential', or 'hyperbolic'), default is 'linear'
+        '''
         self.name = 'Circular Diffusion Model with collapsing boundaries'
+        self.threshold_dynamic = threshold_dynamic
 
 
     def simulate(self, threshold, decay, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):
@@ -225,7 +232,7 @@ class CollapsingThresholdCDM:
         zero_drift_fpt = np.interp(t, T, gz)
         return normalized_term * girsanov_term * zero_drift_fpt
     
-    def joint_lpdf(self, rt, theta, threshold, decay, drift_vec, ndt, s_v=0, s_t=0, sigma=1):
+    def __joint_lpdf_linear(self, rt, theta, threshold, decay, drift_vec, ndt, s_v=0, s_t=0, sigma=1):
         '''
         Compute the joint log-probability density function of response time and choice angle
 

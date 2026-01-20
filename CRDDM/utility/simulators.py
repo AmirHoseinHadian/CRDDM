@@ -2,12 +2,13 @@ import numpy as np
 from numba import jit
 
 @jit(nopython=True)
-def simulate_CDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
+def simulate_CDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
     '''
     input:
         threshold: a positive floating number
         drift_vec: drift vector; a two-dimensional array
         ndt: a positive floating number
+        threshold_dynamic: type of threshold collapse ('fixed', 'linear', 'exponential', or 'hyperbolic')
         decay: decay rate of the collapsing boundary
         s_v: standard deviation of drift rate variability
         s_t: range of non-decision time variability
@@ -31,10 +32,22 @@ def simulate_CDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma=1
     else:
         mu_t = drift_vec
 
-    while np.linalg.norm(x) < threshold - decay*rt:
-        x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(2)
-        rt += dt
-    
+    if threshold_dynamic == 'fixed':
+        while np.linalg.norm(x) < threshold:
+            x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(2)
+            rt += dt
+    elif threshold_dynamic == 'linear':
+        while np.linalg.norm(x) < threshold - decay*rt:
+            x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(2)
+            rt += dt
+    elif threshold_dynamic == 'exponential':
+        while np.linalg.norm(x) < threshold * np.exp(-decay*rt):
+            x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(2)
+            rt += dt
+    elif threshold_dynamic == 'hyperbolic':
+        while np.linalg.norm(x) < threshold / (1 + decay*rt):
+            x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(2)
+            rt += dt
     theta = np.arctan2(x[1], x[0]) 
     return ndt_t+rt, theta
 
