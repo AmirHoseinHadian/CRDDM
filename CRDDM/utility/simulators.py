@@ -107,12 +107,13 @@ def simulate_SDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', dec
 
 
 @jit(nopython=True)
-def simulate_HSDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
+def simulate_HSDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
     '''
     input:
         threshold: a positive floating number
         drift_vec: drift vector; a four-dimensional array
         ndt: a positive floating number
+        threshold_dynamic: type of threshold collapse ('fixed', 'linear', 'exponential', or 'hyperbolic')
         decay: decay rate of the collapsing boundary
         s_v: standard deviation of drift rate variability
         s_t: range of non-decision time variability
@@ -136,10 +137,23 @@ def simulate_HSDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma=
     else:
         mu_t = drift_vec
 
-    while np.linalg.norm(x) < threshold - decay*rt:
-        x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(4)
-        rt += dt
-    
+    if threshold_dynamic == 'fixed':
+        while np.linalg.norm(x) < threshold:
+            x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(4)
+            rt += dt
+    elif threshold_dynamic == 'linear':
+        while np.linalg.norm(x) < threshold - decay*rt:
+            x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(4)
+            rt += dt
+    elif threshold_dynamic == 'exponential':
+        while np.linalg.norm(x) < threshold * np.exp(-decay*rt):
+            x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(4)
+            rt += dt
+    elif threshold_dynamic == 'hyperbolic':
+        while np.linalg.norm(x) < threshold / (1 + decay*rt):
+            x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(4)
+            rt += dt
+
     theta1 = np.arctan2(np.sqrt(x[3]**2 + x[2]**2 + x[1]**2), x[0])
     theta2 = np.arctan2(np.sqrt(x[3]**2 + x[2]**2), x[1])
     theta3 = np.arctan2(x[3], x[2])
@@ -148,12 +162,13 @@ def simulate_HSDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma=
 
 
 @jit(nopython=True)
-def simulate_PSDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
+def simulate_PSDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
     '''
     input:
         threshold: a positive floating number
         drift_vec: drift vector; a two-dimensional array
         ndt: a positive floating number
+        threshold_dynamic: type of threshold collapse ('fixed', 'linear', 'exponential', or 'hyperbolic')
         decay: decay rate of the collapsing boundary
         s_v: standard deviation of drift rate variability
         s_t: range of non-decision time variability
@@ -176,7 +191,6 @@ def simulate_PSDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma=
     muy = norm_mu * np.sin(theta_mu) * np.sin(rphi)
 
     mu = np.array([mux, muy, muz])
-    mmut = np.zeros((3,))
 
     if s_v>0:
         mu_t = mu + s_v*np.random.randn(3)
@@ -188,10 +202,26 @@ def simulate_PSDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma=
     else:
         ndt_t = ndt
 
-    while np.sqrt(x[0]**2 + x[1]**2 + x[2]**2) < threshold - decay*rt:
-        x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(3)
-        
-        rt += dt
+    if threshold_dynamic == 'fixed':
+        while np.sqrt(x[0]**2 + x[1]**2 + x[2]**2) < threshold - decay*rt:
+            x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(3)
+            
+            rt += dt
+    elif threshold_dynamic == 'linear':
+        while np.sqrt(x[0]**2 + x[1]**2 + x[2]**2) < threshold - decay*rt:
+            x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(3)
+            
+            rt += dt
+    elif threshold_dynamic == 'exponential':
+        while np.sqrt(x[0]**2 + x[1]**2 + x[2]**2) < threshold * np.exp(-decay*rt):
+            x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(3)
+            
+            rt += dt
+    elif threshold_dynamic == 'hyperbolic':
+        while np.sqrt(x[0]**2 + x[1]**2 + x[2]**2) < threshold / (1 + decay*rt):
+            x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(3)
+            
+            rt += dt
     theta = np.arctan2(np.sqrt(x[0]**2 + x[1]**2), x[2])    
     
     return ndt_t+rt, theta
