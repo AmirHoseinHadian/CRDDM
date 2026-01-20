@@ -1,0 +1,42 @@
+site_name: CRDDM
+site_author: Amir Hosein Hadian
+site_description: Continuous Response Diffusion Decision Models (CRDDM) - documentation
+repo_name: AmirHoseinHadian/CRDDM
+repo_url: https://github.com/AmirHoseinHadian/CRDDM
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - content.code.copy
+    - search.highlight
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Tutorials:
+      - Quickstart: tutorials/quickstart.md
+  - API Reference: api.md
+
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          # Your package appears to live in a top-level folder "CRDDM/" in the repo.
+          # This tells mkdocstrings where to import modules from.
+          paths: ["."]
+          options:
+            show_source: true
+            show_signature_annotations: true
+            merge_init_into_class: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+
