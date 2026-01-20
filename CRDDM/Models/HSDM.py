@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy.special import iv
 
 from CRDDM.utility.simulators import simulate_HSDM_trial
 from CRDDM.utility.fpts import hsdm_short_t_fpt_z, hsdm_long_t_fpt_z, ie_fpt
@@ -22,6 +23,13 @@ class fixedThresholdHSDM:
                                                       s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
         
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response1', 'response2', 'response3'])
+    
+    def response_time_pdf(self, t, threshold, drift_vec, sigma=1):
+        kappa = threshold * np.linalg.norm(drift_vec)
+        normalized_term = iv(0, kappa)
+        girsanov_term = np.exp(-0.5 * (drift_vec[0]**2 + drift_vec[1]**2 + drift_vec[2]**2 + drift_vec[3]**2) * t)
+        zero_drift_fpt = hsdm_long_t_fpt_z(t, threshold, sigma=sigma)
+        return normalized_term * girsanov_term * zero_drift_fpt
     
     def joint_lpdf(self, rt, theta, threshold, drift_vec, ndt, s_v=0, s_t=0, sigma=1):
         tt = np.maximum(rt - ndt, 0)

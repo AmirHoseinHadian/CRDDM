@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy.special import iv
 
 from CRDDM.utility.simulators import simulate_CDM_trial
 from CRDDM.utility.fpts import cdm_short_t_fpt_z, cdm_long_t_fpt_z, ie_fpt
@@ -23,12 +24,12 @@ class FixedThresholdCDM:
         
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response'])
 
-    # def response_time_pdf(self, t, threshold, drift_vec, sigma=1):
-    #     kappa = threshold * np.linalg.norm(drift_vec)
-    #     normalized_term = iv(0, kappa)
-    #     girsanov_term = np.exp(-0.5 * (drift_vec[0]**2+ drift_vec[1]**2) * t)
-    #     zero_drift_fpt = long_t_fpt_z(t, threshold, sigma=sigma)
-    #     return normalized_term * girsanov_term * zero_drift_fpt
+    def response_time_pdf(self, t, threshold, drift_vec, sigma=1):
+        kappa = threshold * np.linalg.norm(drift_vec)
+        normalized_term = iv(0, kappa)
+        girsanov_term = np.exp(-0.5 * (drift_vec[0]**2+ drift_vec[1]**2) * t)
+        zero_drift_fpt = cdm_long_t_fpt_z(t, threshold, sigma=sigma)
+        return normalized_term * girsanov_term * zero_drift_fpt
 
     # def response_pdf(self,theta, threshold, drift_vec):
     #     drift_angle = np.arctan2(drift_vec[1], drift_vec[0])
