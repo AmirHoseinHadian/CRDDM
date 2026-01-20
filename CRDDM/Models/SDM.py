@@ -47,7 +47,17 @@ class FixedThresholdSDM:
             
             log_density = term1 - term2 + np.log(fpt_z) - np.log(2*np.pi)
         else:
-            pass # to be implemented later
+            s_v2 = s_v**2
+            x2 =  threshold*np.cos(theta[:, 0])
+            x1 =  threshold*np.sin(theta[:, 0])*np.cos(theta[:, 1]) 
+            x0 =  threshold*np.sin(theta[:, 0])*np.sin(theta[:, 1])
+            fixed = 1/(np.sqrt(s_v2 * tt + 1))
+            exponent0 = -0.5*drift_vec[0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[0])**2 / (s_v2 * (s_v2 * tt + 1))
+            exponent1 = -0.5*drift_vec[1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[1])**2 / (s_v2 * (s_v2 * tt + 1))
+            exponent2 = -0.5*drift_vec[2]**2/s_v2 + 0.5*(x2 * s_v2 + drift_vec[2])**2 / (s_v2 * (s_v2 * tt + 1))
+
+            # the joint density of choice and RT for the full process
+            log_density = 3*np.log(fixed) + exponent0 + exponent1 + exponent2 + np.log(fpt_z) - np.log(2*np.pi)
 
         log_density[rt - ndt <= 0] = np.log(0.1**14)
         log_density = np.maximum(log_density, np.log(0.1**14))
