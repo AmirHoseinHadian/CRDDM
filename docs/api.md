@@ -1,13 +1,21 @@
-
-### `docs/api.md`
-This is the page that auto-generates API docs from your docstrings:
-
-```markdown
 # API Reference
 
-## Package
+This reference is generated automatically from the package docstrings via **mkdocstrings**.
+
+## Top-level package
+
 ::: CRDDM
 
-## Submodule example
-::: CRDDM.Models.PSDM.ProjectedSphericalDiffusionModel.simulate
-```
+## Models
+
+### Circular diffusion model
+
+::: CRDDM.Models.Circular
+
+### Spherical diffusion models
+
+::: CRDDM.Models.Spherical
+
+### Hyper-spherical diffusion models
+
+::: CRDDM.Models.HyperSpherical
