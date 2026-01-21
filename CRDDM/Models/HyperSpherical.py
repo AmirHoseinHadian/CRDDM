@@ -16,10 +16,14 @@ class HyperSphericalDiffusionModel:
         Parameters
         ----------
         threshold_dynamic : str, optional
-            The type of threshold collapse ('fixed', 'linear', 'exponential', or 'hyperbolic'), default is 'fixed'
+            The type of threshold collapse ('fixed', 'linear', 'exponential', 'hyperbolic', or 'custom'), default is 'fixed'
         '''
         self.name = 'Hyper-Spherical Diffusion Model'
-        self.threshold_dynamic = threshold_dynamic
+        
+        if threshold_dynamic in ['fixed', 'linear', 'exponential', 'hyperbolic', 'custom']:
+            self.threshold_dynamic = threshold_dynamic
+        else:
+            raise ValueError("\'threshold_dynamic\' must be one of \'fixed\', \'linear\', \'exponential\', \'hyperbolic\', or \'custom\'. However, got \'{}\'".format(threshold_dynamic))
 
     def simulate(self, drift_vec, ndt, threshold=1, decay=0, threshold_function=None, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):
         '''
@@ -175,7 +179,11 @@ class ProjectedHyperSphericalDiffusionModel:
     '''
     def __init__(self, threshold_dynamic='fixed'):
         self.name = 'Projected Hyper-Spherical Diffusion Model'
-        self.threshold_dynamic = threshold_dynamic
+        
+        if threshold_dynamic in ['fixed', 'linear', 'exponential', 'hyperbolic', 'custom']:
+            self.threshold_dynamic = threshold_dynamic
+        else:
+            raise ValueError("\'threshold_dynamic\' must be one of \'fixed\', \'linear\', \'exponential\', \'hyperbolic\', or \'custom\'. However, got \'{}\'".format(threshold_dynamic))
 
     def simulate(self, drift_vec, ndt, threshold=1, decay=0, threshold_function=None, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):
         pass # To be implemented
