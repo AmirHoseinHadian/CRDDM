@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.special import iv
 
-from CRDDM.utility.simulators import simulate_CDM_trial
+from CRDDM.utility.simulators import simulate_CDM_trial, simulate_custom_threshold_CDM_trial
 from CRDDM.utility.fpts import cdm_short_t_fpt_z, cdm_long_t_fpt_z, ie_fpt_linear, ie_fpt_exponential, ie_fpt_hyperbolic
     
 
@@ -16,13 +16,13 @@ class CircularDiffusionModel:
         Parameters
         ----------
         threshold_dynamic : str, optional
-            The type of threshold collapse ('fixed', 'linear', 'exponential', or 'hyperbolic'), default is 'fixed'
+            The type of threshold collapse ('fixed', 'linear', 'exponential', 'hyperbolic', or 'custom'), default is 'fixed'
         '''
         self.name = 'Circular Diffusion Model'
         self.threshold_dynamic = threshold_dynamic
 
 
-    def simulate(self, drift_vec, ndt, threshold, decay=0, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):
+    def simulate(self, drift_vec, ndt, threshold=1, decay=0, threshold_function=None, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):
         '''
         Simulate data from the Circular Diffusion Model with collapsing boundaries
 
@@ -33,9 +33,13 @@ class CircularDiffusionModel:
         ndt : float
             The non-decision time
         threshold : float
-            The initial decision threshold
+            The initial decision threshold (default is 1)
         decay : float
             The decay rate of the threshold (default is 0)
+        threshold_function : callable, if threshold_dynamic is 'custom'
+            A function that takes time t and returns the threshold at time t
+        dt_threshold_function : callable, if threshold_dynamic is 'custom'
+            A function that takes time t and returns the derivative of the threshold at time t
         s_v : float, optional
             The standard deviation of drift variability (default is 0)
         s_t : float, optional
@@ -55,10 +59,16 @@ class CircularDiffusionModel:
         RT = np.empty((n_sample,))
         Choice = np.empty((n_sample,))
 
-        for n in range(n_sample):
-            RT[n], Choice[n] = simulate_CDM_trial(threshold, drift_vec.astype(np.float64), ndt, 
-                                                  threshold_dynamic=self.threshold_dynamic,
-                                                  decay=decay, s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
+        if self.threshold_dynamic != 'custom':
+            for n in range(n_sample):
+                RT[n], Choice[n] = simulate_CDM_trial(threshold, drift_vec.astype(np.float64), ndt, 
+                                                    threshold_dynamic=self.threshold_dynamic,
+                                                    decay=decay, s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
+        else:
+            for n in range(n_sample):
+                RT[n], Choice[n] = simulate_custom_threshold_CDM_trial(threshold_function,
+                                                                       drift_vec.astype(np.float64), ndt, 
+                                                                       s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
         
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response'])
 
