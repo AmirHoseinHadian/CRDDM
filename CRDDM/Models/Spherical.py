@@ -4,7 +4,7 @@ from scipy.special import iv
 
 from CRDDM.utility.simulators import simulate_SDM_trial, simulate_custom_threshold_SDM_trial
 from CRDDM.utility.simulators import simulate_PSDM_trial, simulate_custom_threshold_PSDM_trial
-from CRDDM.utility.fpts import sdm_short_t_fpt_z, sdm_long_t_fpt_z, ie_fpt_linear, ie_fpt_exponential, ie_fpt_hyperbolic
+from CRDDM.utility.fpts import sdm_short_t_fpt_z, sdm_long_t_fpt_z, ie_fpt_linear, ie_fpt_exponential, ie_fpt_hyperbolic, ie_fpt_custom
 
 
 class SphericalDiffusionModel:
@@ -68,8 +68,9 @@ class SphericalDiffusionModel:
                                                                           s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
         
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response1', 'response2'])
-    
-    def joint_lpdf(self, rt, theta, threshold, decay, drift_vec, ndt, s_v=0, s_t=0, sigma=1):
+
+
+    def joint_lpdf(self, rt, theta, drift_vec, ndt, threshold, decay=0, threshold_function=None, dt_threshold_function=None, s_v=0, s_t=0, sigma=1):
         tt = np.maximum(rt - ndt, 0)
 
         # first-passage time density of zero drift process
@@ -94,6 +95,12 @@ class SphericalDiffusionModel:
         elif self.threshold_dynamic == 'hyperbolic':
             a = threshold / (1 + decay*tt)
             g_z, T = ie_fpt_hyperbolic(threshold, decay, 3, 0.000001, dt=0.02, T_max=rt.max())
+            fpt_z = np.interp(tt, T, g_z)
+        elif self.threshold_dynamic == 'custom':
+            threshold_function2 = lambda t: threshold_function(t)**2
+            dt_threshold_function2 = lambda t: 2 * dt_threshold_function(t) * threshold_function(t)
+            a = threshold_function(tt)
+            g_z, T = ie_fpt_custom(threshold_function2, dt_threshold_function2, 3, 0.000001, dt=0.02, T_max=rt.max())
             fpt_z = np.interp(tt, T, g_z)
 
         fpt_z = np.maximum(fpt_z, 0.1**14)
@@ -190,7 +197,7 @@ class ProjectedSphericalDiffusionModel:
 
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response'])
     
-    def joint_lpdf(self, rt, theta, drift_vec, ndt, threshold, decay=0, s_v=0, s_t=0, sigma=1):
+    def joint_lpdf(self, rt, theta, drift_vec, ndt, threshold, decay=0, threshold_function=None, dt_threshold_function=None, s_v=0, s_t=0, sigma=1):
         tt = np.maximum(rt - ndt, 0)
 
         # first-passage time density of zero drift process
@@ -215,6 +222,12 @@ class ProjectedSphericalDiffusionModel:
         elif self.threshold_dynamic == 'hyperbolic':
             a = threshold / (1 + decay*tt)
             g_z, T = ie_fpt_hyperbolic(threshold, decay, 3, 0.000001, dt=0.02, T_max=rt.max())
+            fpt_z = np.interp(tt, T, g_z)
+        elif self.threshold_dynamic == 'custom':
+            threshold_function2 = lambda t: threshold_function(t)**2
+            dt_threshold_function2 = lambda t: 2 * dt_threshold_function(t) * threshold_function(t)
+            a = threshold_function(tt)
+            g_z, T = ie_fpt_custom(threshold_function2, dt_threshold_function2, 3, 0.000001, dt=0.02, T_max=rt.max())
             fpt_z = np.interp(tt, T, g_z)
 
         fpt_z = np.maximum(fpt_z, 0.1**14)

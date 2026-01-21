@@ -1,8 +1,9 @@
 import numpy as np
 
 from numba import jit
-from CRDDM.utility.helpers import iv_numba, ive_numba
+from scipy.special import iv, ive
 
+from CRDDM.utility.helpers import iv_numba, ive_numba
 from CRDDM.utility.Constants import zeros_0, zeros_1
 from CRDDM.utility.Constants import JVZ1, JVZ2
 
@@ -197,4 +198,54 @@ def ie_fpt_hyperbolic(threshold, decay, q, z, sigma=2, dt=0.1, T_max=2):
         g[n] = s
         T[n] = n*dt
 
+    return g, T
+
+def k_custom(dt_threshold_function, t, q, sigma=2):
+    return 0.5 * (q - 0.5*sigma - dt_threshold_function(t))
+
+def psi_custom(threshold_function, dt_threshold_function, t, z, tau, q, sigma=2):
+    kk = k_custom(dt_threshold_function, t, q, sigma)
+    
+    if 2*np.sqrt(threshold_function(t)*z)/(sigma*(t-tau))<=700:
+        term1 = 1./(sigma*(t - tau)) * np.exp(- (threshold_function(t) + z)/(sigma*(t-tau)))
+        term2 = (threshold_function(t)/z)**(0.5*(q-sigma)/sigma)
+        term3 = dt_threshold_function(t) - (threshold_function(t)/(t-tau)) + kk
+        term4 = iv(q/sigma-1, 2*np.sqrt(threshold_function(t)*z)/(sigma*(t-tau)))
+        term5 = (np.sqrt(threshold_function(t)*z)/(t-tau)) * iv(q/sigma, 2*np.sqrt(threshold_function(t)*z)/(sigma*(t-tau)))
+    else:
+        term1 = 1./(sigma*(t - tau))
+        term2 = (threshold_function(t)/z)**(0.5*(q-sigma)/sigma)
+        term3 = dt_threshold_function(t) - (threshold_function(t)/(t-tau)) + kk
+        term4 = ive(q/sigma-1, (threshold_function(t) + z)/(sigma*(t-tau)))
+        term5 = (np.sqrt(threshold_function(t)*z)/(t-tau)) * ive(q/sigma, (threshold_function(t) + z)/(sigma*(t-tau)))
+    
+    return term1 * term2 * (term3 * term4 + term5)
+
+def ie_fpt_custom(threshold_function, dt_threshold_function, q, z, sigma=2, dt=0.1, T_max=2):
+    g = np.zeros((int(T_max/dt)+2,))
+    T = np.zeros((int(T_max/dt)+2,))
+    
+    if threshold_function(dt) > 0:
+        g[1] = -2*psi_custom(threshold_function, dt_threshold_function, dt, z, 0, q, sigma)
+    T[1] = dt
+
+    for n in range(2, int(T_max/dt)+2):
+        if threshold_function(n*dt) <= 0:
+            T[n] = n*dt
+            continue
+
+        s = -2 * psi_custom(threshold_function, dt_threshold_function, n*dt, z, 0, q, sigma)
+
+        for j in range(1, n):
+            if threshold_function(j*dt) <= 0:
+                continue
+
+            s += 2 * dt * g[j] * psi_custom(threshold_function, dt_threshold_function, n*dt, threshold_function(j*dt), j*dt, q, sigma)
+
+        g[n] = s
+        T[n] = n*dt
+        
+    g = np.asarray(g)
+    T = np.asarray(T)
+    
     return g, T

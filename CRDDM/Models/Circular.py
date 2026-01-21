@@ -3,7 +3,7 @@ import pandas as pd
 from scipy.special import iv
 
 from CRDDM.utility.simulators import simulate_CDM_trial, simulate_custom_threshold_CDM_trial
-from CRDDM.utility.fpts import cdm_short_t_fpt_z, cdm_long_t_fpt_z, ie_fpt_linear, ie_fpt_exponential, ie_fpt_hyperbolic
+from CRDDM.utility.fpts import cdm_short_t_fpt_z, cdm_long_t_fpt_z, ie_fpt_linear, ie_fpt_exponential, ie_fpt_hyperbolic, ie_fpt_custom
     
 
 class CircularDiffusionModel:
@@ -73,7 +73,7 @@ class CircularDiffusionModel:
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response'])
 
 
-    def joint_lpdf(self, rt, theta, drift_vec, ndt, threshold, decay=0, s_v=0, s_t=0, sigma=1):
+    def joint_lpdf(self, rt, theta, drift_vec, ndt, threshold, decay=0, threshold_function=None, dt_threshold_function=None, s_v=0, s_t=0, sigma=1):
         '''
         Compute the joint log-probability density function of response time and choice angle
 
@@ -91,6 +91,10 @@ class CircularDiffusionModel:
             The initial decision threshold
         decay : float
             The decay rate of the threshold (default is 0)
+        threshold_function : callable, if threshold_dynamic is 'custom'
+            A function that takes time t and returns the threshold at time t
+        dt_threshold_function : callable, if threshold_dynamic is 'custom'
+            A function that takes time t and returns the derivative of the threshold at time t
         s_v : float, optional
             The standard deviation of drift variability (default is 0)
         s_t : float, optional
@@ -103,6 +107,7 @@ class CircularDiffusionModel:
         array-like
             The joint log-probability density evaluated at (rt, theta) with same shape as rt and theta
         '''
+
         tt = np.maximum(rt - ndt, 0)
 
         # first-passage time density of zero drift process
@@ -128,6 +133,12 @@ class CircularDiffusionModel:
         elif self.threshold_dynamic == 'hyperbolic':
             a = threshold / (1 + decay*tt)
             g_z, T = ie_fpt_hyperbolic(threshold, decay, 2, 0.000001, dt=0.02, T_max=rt.max())
+            fpt_z = np.interp(tt, T, g_z)
+        elif self.threshold_dynamic == 'custom':
+            threshold_function2 = lambda t: threshold_function(t)**2
+            dt_threshold_function2 = lambda t: 2 * dt_threshold_function(t) * threshold_function(t)
+            a = threshold_function(tt)
+            g_z, T = ie_fpt_custom(threshold_function2, dt_threshold_function2, 2, 0.000001, dt=0.02, T_max=rt.max())
             fpt_z = np.interp(tt, T, g_z)
 
         fpt_z = np.maximum(fpt_z, 0.1**14)
