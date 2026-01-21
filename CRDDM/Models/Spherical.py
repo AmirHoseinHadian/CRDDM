@@ -184,9 +184,9 @@ class ProjectedSphericalDiffusionModel:
                                                        decay=decay, s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
         else:
             for n in range(n_sample):
-                RT[n], Choice[n] = simulate_custom_threshold_SDM_trial(threshold_function,
-                                                                       drift_vec.astype(np.float64), ndt, 
-                                                                       s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
+                RT[n], Choice[n] = simulate_custom_threshold_PSDM_trial(threshold_function,
+                                                                        drift_vec.astype(np.float64), ndt, 
+                                                                        s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
 
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response'])
     
