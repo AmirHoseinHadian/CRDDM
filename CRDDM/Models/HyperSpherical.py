@@ -69,6 +69,40 @@ class HyperSphericalDiffusionModel:
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response1', 'response2', 'response3'])
 
     def joint_lpdf(self, rt, theta, drift_vec, ndt, threshold, decay=0, threshold_function=None, dt_threshold_function=None, s_v=0, s_t=0, sigma=1):
+        '''
+        Compute the joint log-probability density function of response time and choice angles
+
+        Parameters
+        ----------
+        rt : array-like, shape (n_samples,)
+            The response times
+        theta : array-like, shape (n_samples, 3)
+            The choice angles in spherical coordinates (theta1, theta2, theta3)
+        drift_vec : array-like, shape (4,)
+            The drift rates in each dimension
+        ndt : float
+            The non-decision time
+        threshold : float
+            The decision threshold (default is 1)
+        decay : float, optional
+            The threshold decay rate (default is 0)
+        threshold_function : callable, if threshold_dynamic is 'custom'
+            A function that takes time t and returns the threshold at time t
+        dt_threshold_function : callable, if threshold_dynamic is 'custom'
+            A function that takes time t and returns the derivative of the threshold at time t
+        s_v : float, optional
+            The standard deviation of drift variability (default is 0)
+        s_t : float, optional
+            The standard deviation of non-decision time variability (default is 0)
+        sigma : float, optional
+            The diffusion coefficient (default is 1)
+
+        Returns
+        -------
+        log_density : array-like, shape (n_samples,)
+            The joint log-probability density of response time and choice angles
+        '''
+        
         tt = np.maximum(rt - ndt, 0)
 
         # first-passage time density of zero drift process
