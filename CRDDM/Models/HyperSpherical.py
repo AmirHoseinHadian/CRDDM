@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.special import iv
 
-from CRDDM.utility.simulators import simulate_HSDM_trial
+from CRDDM.utility.simulators import simulate_HSDM_trial, simulate_PHSDM_trial
 from CRDDM.utility.fpts import hsdm_short_t_fpt_z, hsdm_long_t_fpt_z, ie_fpt_linear, ie_fpt_exponential, ie_fpt_hyperbolic
 
 
@@ -119,3 +119,18 @@ class HyperSphericalDiffusionModel:
         log_density = np.maximum(log_density, np.log(0.1**14))
             
         return log_density
+    
+
+class ProjectedHyperSphericalDiffusionModel:
+    '''
+    Projected Hyper-Spherical Diffusion Model
+    '''
+    def __init__(self, threshold_dynamic='fixed'):
+        self.name = 'Projected Hyper-Spherical Diffusion Model'
+        self.threshold_dynamic = threshold_dynamic
+
+    def simulate(self, drift_vec, ndt, threshold, decay=0, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):
+        pass # To be implemented
+
+    def joint_lpdf(self, rt, theta, threshold, decay, drift_vec, ndt, s_v=0, s_t=0, sigma=1):
+        pass # To be implemented
