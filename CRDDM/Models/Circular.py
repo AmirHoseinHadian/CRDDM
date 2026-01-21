@@ -62,42 +62,6 @@ class CircularDiffusionModel:
         
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response'])
 
-    def response_time_pdf(self, t, threshold, decay, drift_vec, sigma=1):
-        '''
-        Compute the response time probability density function for given parameters
-
-        Parameters
-        ----------
-        t : array-like
-            Response times at which to evaluate the PDF
-        threshold : float
-            The initial decision threshold
-        decay : float
-            The decay rate of the threshold
-        drift_vec : array-like, shape (2,)
-            The drift vector [drift_x, drift_y]
-        sigma : float, optional
-            The diffusion coefficient (default is 1)
-
-        Returns
-        -------
-        array-like
-            The response time PDF evaluated at times t
-        '''
-        kappa = (threshold - decay * t) * np.linalg.norm(drift_vec)
-        normalized_term = iv(0, kappa)
-        girsanov_term = np.exp(-0.5 * (drift_vec[0]**2+ drift_vec[1]**2) * t)
-        if self.threshold_dynamic == 'fixed':
-            gz, T = ie_fpt_exponential(threshold, 0, 2, 0.000001, dt=0.02, T_max=t.max())
-        elif self.threshold_dynamic == 'linear':
-            gz, T = ie_fpt_linear(threshold, decay, 2, 0.000001, dt=0.02, T_max=t.max())
-        elif self.threshold_dynamic == 'exponential':
-            gz, T = ie_fpt_exponential(threshold, decay, 2, 0.000001, dt=0.02, T_max=t.max())
-        elif self.threshold_dynamic == 'hyperbolic':
-            gz, T = ie_fpt_hyperbolic(threshold, decay, 2, 0.000001, dt=0.02, T_max=t.max())
-        
-        zero_drift_fpt = np.interp(t, T, gz)
-        return normalized_term * girsanov_term * zero_drift_fpt
 
     def joint_lpdf(self, rt, theta, drift_vec, ndt, threshold, decay=0, s_v=0, s_t=0, sigma=1):
         '''
