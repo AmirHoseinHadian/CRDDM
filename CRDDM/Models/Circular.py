@@ -88,7 +88,7 @@ class CircularDiffusionModel:
             Response times
         theta : array-like
             Choice angles in radians
-        drift_vec : array-like, shape (2,)
+        drift_vec : array-like, shape (2,) or (n_samples, 2)
             The drift vector [drift_x, drift_y]
         ndt : float
             The non-decision time
@@ -112,6 +112,12 @@ class CircularDiffusionModel:
         array-like
             The joint log-probability density evaluated at (rt, theta) with same shape as rt and theta
         '''
+
+        if drift_vec.ndim == 1:
+            drift_vec = np.array(drift_vec).reshape(1, -1)
+
+        if drift_vec.shape[1] != 2 or drift_vec.ndim != 2:
+            raise ValueError("drift_vec must have shape (2,) or (n_samples, 2)")
 
         tt = np.maximum(rt - ndt, 0)
 
@@ -151,11 +157,11 @@ class CircularDiffusionModel:
         # Girsanov:
         if s_v == 0:
             # No drift variability
-            mu_dot_x0 = drift_vec[0] * np.cos(theta)
-            mu_dot_x1 = drift_vec[1] * np.sin(theta)
+            mu_dot_x0 = drift_vec[:, 0] * np.cos(theta)
+            mu_dot_x1 = drift_vec[:, 1] * np.sin(theta)
 
             term1 = a * (mu_dot_x0 + mu_dot_x1)
-            term2 = 0.5 * (drift_vec[0]**2 + drift_vec[1]**2) * tt
+            term2 = 0.5 * (drift_vec[:, 0]**2 + drift_vec[:, 1]**2) * tt
 
             log_density = term1 - term2 + np.log(fpt_z) - np.log(2*np.pi)
         else:
@@ -164,8 +170,8 @@ class CircularDiffusionModel:
             x0 =  a * np.cos(theta)
             x1 =  a * np.sin(theta)
             fixed = 1/(np.sqrt(s_v2 * tt + 1))
-            exponent0 = -0.5*drift_vec[0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[0])**2 / (s_v2 * (s_v2 * tt + 1))
-            exponent1 = -0.5*drift_vec[1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[1])**2 / (s_v2 * (s_v2 * tt + 1))
+            exponent0 = -0.5*drift_vec[:, 0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[:, 0])**2 / (s_v2 * (s_v2 * tt + 1))
+            exponent1 = -0.5*drift_vec[:, 1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[:, 1])**2 / (s_v2 * (s_v2 * tt + 1))
 
             log_density = 2*np.log(fixed) + exponent0 + exponent1 + np.log(fpt_z) - np.log(2*np.pi)
 

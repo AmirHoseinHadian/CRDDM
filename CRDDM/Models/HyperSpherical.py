@@ -82,7 +82,7 @@ class HyperSphericalDiffusionModel:
             The response times
         theta : array-like, shape (n_samples, 3)
             The choice angles in spherical coordinates (theta1, theta2, theta3)
-        drift_vec : array-like, shape (4,)
+        drift_vec : array-like, shape (4,) or (n_samples, 4)
             The drift rates in each dimension
         ndt : float
             The non-decision time
@@ -106,7 +106,13 @@ class HyperSphericalDiffusionModel:
         log_density : array-like, shape (n_samples,)
             The joint log-probability density of response time and choice angles
         '''
-        
+
+        if drift_vec.ndim == 1:
+            drift_vec = np.array(drift_vec).reshape(1, -1)
+
+        if drift_vec.shape[1] != 4 or drift_vec.ndim != 2:
+            raise ValueError("drift_vec must have shape (4,) or (n_samples, 4)")
+
         tt = np.maximum(rt - ndt, 0)
 
         # first-passage time density of zero drift process
@@ -143,12 +149,12 @@ class HyperSphericalDiffusionModel:
         # Girsanov:
         if s_v == 0:
             # No drift variability
-            mu_dot_x0 = drift_vec[0]*np.cos(theta[:, 0])
-            mu_dot_x1 = drift_vec[1]*np.sin(theta[:, 0])*np.cos(theta[:, 1]) 
-            mu_dot_x2 = drift_vec[2]*np.sin(theta[:, 0])*np.sin(theta[:, 1])*np.cos(theta[:, 2])
-            mu_dot_x3 = drift_vec[3]*np.sin(theta[:, 0])*np.sin(theta[:, 1])*np.sin(theta[:, 2])
+            mu_dot_x0 = drift_vec[:, 0]*np.cos(theta[:, 0])
+            mu_dot_x1 = drift_vec[:, 1]*np.sin(theta[:, 0])*np.cos(theta[:, 1]) 
+            mu_dot_x2 = drift_vec[:, 2]*np.sin(theta[:, 0])*np.sin(theta[:, 1])*np.cos(theta[:, 2])
+            mu_dot_x3 = drift_vec[:, 3]*np.sin(theta[:, 0])*np.sin(theta[:, 1])*np.sin(theta[:, 2])
             term1 = a * (mu_dot_x0 + mu_dot_x1 + mu_dot_x2 + mu_dot_x3)
-            term2 = 0.5 * np.linalg.norm(drift_vec, 2)**2 * tt
+            term2 = 0.5 * (drift_vec[:, 0]**2 + drift_vec[:, 1]**2 + drift_vec[:, 2]**2 + drift_vec[:, 3]**2) * tt
 
             log_density = term1 - term2 + np.log(fpt_z) - np.log(2*np.pi)
         else:
@@ -159,10 +165,10 @@ class HyperSphericalDiffusionModel:
             x1 =  a * np.sin(theta[:, 0])*np.sin(theta[:, 1])*np.cos(theta[:, 2])
             x0 =  a * np.sin(theta[:, 0])*np.sin(theta[:, 1])*np.sin(theta[:, 2])
             fixed = 1/(np.sqrt(s_v2 * tt + 1))
-            exponent0 = -0.5*drift_vec[0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[0])**2 / (s_v2 * (s_v2 * tt + 1))
-            exponent1 = -0.5*drift_vec[1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[1])**2 / (s_v2 * (s_v2 * tt + 1))
-            exponent2 = -0.5*drift_vec[2]**2/s_v2 + 0.5*(x2 * s_v2 + drift_vec[2])**2 / (s_v2 * (s_v2 * tt + 1))
-            exponent3 = -0.5*drift_vec[3]**2/s_v2 + 0.5*(x3 * s_v2 + drift_vec[3])**2 / (s_v2 * (s_v2 * tt + 1))
+            exponent0 = -0.5*drift_vec[:, 0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[:, 0])**2 / (s_v2 * (s_v2 * tt + 1))
+            exponent1 = -0.5*drift_vec[:, 1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[:, 1])**2 / (s_v2 * (s_v2 * tt + 1))
+            exponent2 = -0.5*drift_vec[:, 2]**2/s_v2 + 0.5*(x2 * s_v2 + drift_vec[:, 2])**2 / (s_v2 * (s_v2 * tt + 1))
+            exponent3 = -0.5*drift_vec[:, 3]**2/s_v2 + 0.5*(x3 * s_v2 + drift_vec[:, 3])**2 / (s_v2 * (s_v2 * tt + 1))
 
             # the joint density of choice and RT for the full process
             log_density = 4*np.log(fixed) + exponent0 + exponent1 + exponent2 + exponent3 + np.log(fpt_z) - np.log(2*np.pi)

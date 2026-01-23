@@ -83,7 +83,7 @@ class SphericalDiffusionModel:
             The response times
         theta : array-like, shape (n_samples, 2)
             The choice angles in spherical coordinates (theta1, theta2)
-        drift_vec : array-like, shape (3,)
+        drift_vec : array-like, shape (3,) or (n_samples, 3)
             The drift rates in each dimension
         ndt : float
             The non-decision time
@@ -107,6 +107,12 @@ class SphericalDiffusionModel:
         log_density : array-like, shape (n_samples,)
             The joint log-probability density of response time and choice angles
         '''
+
+        if drift_vec.ndim == 1:
+            drift_vec = np.array(drift_vec).reshape(1, -1)
+
+        if drift_vec.shape[1] != 3 or drift_vec.ndim != 2:
+            raise ValueError("drift_vec must have shape (3,) or (n_samples, 3)")
 
         tt = np.maximum(rt - ndt, 0)
 
@@ -145,11 +151,11 @@ class SphericalDiffusionModel:
         # Girsanov:
         if s_v == 0:
             # No drift variability
-            mu_dot_x0 = drift_vec[0]*np.cos(theta[:, 0])
-            mu_dot_x1 = drift_vec[1]*np.sin(theta[:, 0])*np.cos(theta[:, 1]) 
-            mu_dot_x2 = drift_vec[2]*np.sin(theta[:, 0])*np.sin(theta[:, 1])
+            mu_dot_x0 = drift_vec[:, 0]*np.cos(theta[:, 0])
+            mu_dot_x1 = drift_vec[:, 1]*np.sin(theta[:, 0])*np.cos(theta[:, 1]) 
+            mu_dot_x2 = drift_vec[:, 2]*np.sin(theta[:, 0])*np.sin(theta[:, 1])
             term1 = a * (mu_dot_x0 + mu_dot_x1 + mu_dot_x2)
-            term2 = 0.5 * np.linalg.norm(drift_vec, 2)**2 * tt
+            term2 = 0.5 * (drift_vec[:, 0]**2 + drift_vec[:, 1]**2 + drift_vec[:, 2]**2) * tt
             
             log_density = term1 - term2 + np.log(fpt_z) - np.log(4*np.pi)
         else:
@@ -159,9 +165,9 @@ class SphericalDiffusionModel:
             x1 =  a * np.sin(theta[:, 0])*np.cos(theta[:, 1]) 
             x0 =  a * np.sin(theta[:, 0])*np.sin(theta[:, 1])
             fixed = 1/(np.sqrt(s_v2 * tt + 1))
-            exponent0 = -0.5*drift_vec[0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[0])**2 / (s_v2 * (s_v2 * tt + 1))
-            exponent1 = -0.5*drift_vec[1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[1])**2 / (s_v2 * (s_v2 * tt + 1))
-            exponent2 = -0.5*drift_vec[2]**2/s_v2 + 0.5*(x2 * s_v2 + drift_vec[2])**2 / (s_v2 * (s_v2 * tt + 1))
+            exponent0 = -0.5*drift_vec[:, 0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[:, 0])**2 / (s_v2 * (s_v2 * tt + 1))
+            exponent1 = -0.5*drift_vec[:, 1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[:, 1])**2 / (s_v2 * (s_v2 * tt + 1))
+            exponent2 = -0.5*drift_vec[:, 2]**2/s_v2 + 0.5*(x2 * s_v2 + drift_vec[:, 2])**2 / (s_v2 * (s_v2 * tt + 1))
 
             log_density = 3*np.log(fixed) + exponent0 + exponent1 + exponent2 + np.log(fpt_z) - np.log(4*np.pi)
 
@@ -248,7 +254,7 @@ class ProjectedSphericalDiffusionModel:
             The response times
         theta : array-like, shape (n_samples,)
             The choice angles in radians
-        drift_vec : array-like, shape (2,)
+        drift_vec : array-like, shape (2,) or (n_samples, 2)
             The drift vector [drift_x, drift_y]
         ndt : float
             The non-decision time
@@ -272,6 +278,12 @@ class ProjectedSphericalDiffusionModel:
         log_density : array-like, shape (n_samples,)
             The joint log-probability density of response time and choice angle
         '''
+
+        if drift_vec.ndim == 1:
+            drift_vec = np.array(drift_vec).reshape(1, -1)
+
+        if drift_vec.shape[1] != 2 or drift_vec.ndim != 2:
+            raise ValueError("drift_vec must have shape (2,) or (n_samples, 2)")
         
         tt = np.maximum(rt - ndt, 0)
 
@@ -307,8 +319,8 @@ class ProjectedSphericalDiffusionModel:
 
         fpt_z = np.maximum(fpt_z, 0.1**14)
 
-        norm_mu = np.linalg.norm(drift_vec, 2)
-        theta_mu = np.arctan2(drift_vec[1], drift_vec[0])
+        norm_mu = np.sqrt(drift_vec[:, 0]**2 + drift_vec[:, 1]**2)
+        theta_mu = np.arctan2(drift_vec[:, 1], drift_vec[:, 0])
 
         # Girsanov:
         if s_v == 0:
@@ -323,10 +335,10 @@ class ProjectedSphericalDiffusionModel:
             s_v2 = s_v**2
             c1 = a * np.sin(theta) * s_v2
             c2 = 2*s_v2 * (s_v2 * tt + 1)
-            term1 = 2*np.pi * iv(0, 2*c1 * drift_vec[1]/c2)
+            term1 = 2*np.pi * iv(0, 2*c1 * drift_vec[:, 1]/c2)
             term2 = (1/(np.sqrt(s_v2 * tt + 1)))**3
-            p1 = (c1**2 + drift_vec[1]**2)/c2
-            p2 = (a * np.cos(theta) * s_v2 + drift_vec[0])**2 / c2
+            p1 = (c1**2 + drift_vec[:, 1]**2)/c2
+            p2 = (a * np.cos(theta) * s_v2 + drift_vec[:, 0])**2 / c2
             p3 = (norm_mu**2)/(2*s_v2)
             term3 = np.exp(p1 + p2 - p3)
 
