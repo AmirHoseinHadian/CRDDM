@@ -18,6 +18,7 @@ nav:
   - Installation: installation.md
   - Tutorials:
       - Quickstart: tutorials/quickstart.md
+      - Custom Mapping Function: tutorials/custom_mapping_function.md
   - API Reference: api.md
 
 
@@ -39,4 +40,14 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.highlight
   - pymdownx.inlinehilite
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js
+  - https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js
+  - javascripts/katex.js
+
+extra_css:
+  - https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css
 
