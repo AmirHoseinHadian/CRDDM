@@ -27,7 +27,7 @@ import seaborn as sns
 
 ## 2. Create a projected spherical diffusion model
 
-This model is useful for **bounded response scales**, which are common in valuation and pricing tasks.
+This model is useful for **bounded response scales**, which often are employed in the estimation or valuation tasks. 
 
 ```python
 model = PSDM(threshold_dynamic="fixed")
@@ -111,7 +111,7 @@ The simulated dataset contains:
 - `rt`: response times
 - `response`: model responses on the model scale (radians). 
 
-**Note:** For WTP on \([0, 20]\), you can convert via:  $\text{WTP} = \text{response}/\pi \times 20$.
+**Note:** For WTP on $[0, 20]$, you can convert via:  $\text{WTP} = \text{response}/\pi \times 20$.
 
 ---
 
