@@ -60,15 +60,46 @@ class HyperSphericalDiffusionModel:
         RT = np.empty((n_sample,))
         Choice = np.empty((n_sample, 3))
 
+        if drift_vec.ndim == 1:
+            drift_vec = drift_vec * np.ones((n_sample, 4))
+        elif drift_vec.shape[0] != n_sample:
+            raise ValueError("Number of rows in drift_vec must be equal to n_sample")
+        
+        if type(ndt) is float or type(ndt) is int:
+            ndt = np.full((n_sample,), ndt)
+        elif len(ndt) != n_sample:
+            raise ValueError("Length of ndt must be equal to n_sample")
+        
+        if type(threshold) is float or type(threshold) is int:
+            threshold = np.full((n_sample,), threshold)
+        elif len(threshold) != n_sample:
+            raise ValueError("Length of threshold must be equal to n_sample")
+        
+        if type(decay) is float or type(decay) is int:
+            decay = np.full((n_sample,), decay)
+        elif len(decay) != n_sample:
+            raise ValueError("Length of decay must be equal to n_sample")
+        
+        if threshold_function is None and self.threshold_dynamic == 'custom':
+            raise ValueError("threshold_function must be provided when threshold_dynamic is 'custom'")
+        
+        if threshold_function is not None and self.threshold_dynamic != 'custom':
+            raise ValueError("threshold_function should be None when threshold_dynamic is not 'custom'")
+        
+        if s_v < 0:
+            raise ValueError("s_v must be non-negative")
+        if s_t < 0:
+            raise ValueError("s_t must be non-negative")
+
         if self.threshold_dynamic != 'custom':
             for n in range(n_sample):
-                RT[n], Choice[n, :] = simulate_HSDM_trial(threshold, drift_vec.astype(np.float64), ndt,
+                RT[n], Choice[n, :] = simulate_HSDM_trial(threshold[n], drift_vec[n, :].astype(np.float64), ndt[n],
                                                           threshold_dynamic=self.threshold_dynamic, 
-                                                          decay=decay, s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
+                                                          decay=decay[n], s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
         else:
             for n in range(n_sample):
                 RT[n], Choice[n, :] = simulate_custom_threshold_HSDM_trial(threshold_function,
-                                                                           drift_vec.astype(np.float64), ndt, 
+                                                                           drift_vec[n, :].astype(np.float64), ndt[n], 
                                                                            s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response1', 'response2', 'response3'])
 
