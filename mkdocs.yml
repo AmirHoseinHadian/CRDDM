@@ -18,11 +18,11 @@ nav:
   - Installation: installation.md
   - Tutorials:
       - Quickstart: tutorials/quickstart.md
-      - Mixture Models: tutorials/mixture_models.md
+      - Design Specification: tutorials/design_specification.md
       - Custom Mapping Function: tutorials/custom_mapping_function.md
       - Collapsing Threshold Models: tutorials/collapsing_threshold_models.md
       - Custom Threshold Dynamics: tutorials/custom_threshold_dynamics.md
-      - Fitting to Real Data: tutorials/modeling_experimental_data.md
+      - Mixture Models: tutorials/mixture_models.md
       - Model Comparison: tutorials/model_comparison.md
   - API Reference: api.md
 
