@@ -1,5 +1,5 @@
 import numpy as np
-from numba import jit
+from numba import jit, njit
 
 # ----------------------------
 # Lanczos log-gamma (NumPy-only)
@@ -167,3 +167,14 @@ def iv_numba(v, x):
         if ax > 709.0:
             return np.inf
         return scaled * np.exp(ax)
+    
+@njit(cache=True, fastmath=True)
+def trapz_1d(y, x):
+    """
+    Trapezoidal integral of y over x. Both 1D, same length.
+    """
+    s = 0.0
+    for i in range(x.shape[0] - 1):
+        dx = x[i + 1] - x[i]
+        s += 0.5 * (y[i] + y[i + 1]) * dx
+    return s
