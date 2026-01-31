@@ -23,7 +23,7 @@ def simulate_CDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', dec
     rt = 0
 
     if s_t>0:
-        ndt_t = ndt + (2*s_t*np.random.rand() - s_t)
+        ndt_t = ndt + s_t*np.random.rand()
     else:
         ndt_t = ndt
 
@@ -71,7 +71,7 @@ def simulate_custom_threshold_CDM_trial(threshold_function, drift_vec, ndt, s_v=
     rt = 0
 
     if s_t>0:
-        ndt_t = ndt + (2*s_t*np.random.rand() - s_t)
+        ndt_t = ndt + s_t*np.random.rand() - s_t
     else:
         ndt_t = ndt
 
@@ -110,7 +110,7 @@ def simulate_SDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', dec
     rt = 0
 
     if s_t>0:
-        ndt_t = ndt + (2*s_t*np.random.rand() - s_t)
+        ndt_t = ndt + s_t*np.random.rand()
     else:
         ndt_t = ndt
 
@@ -161,7 +161,7 @@ def simulate_custom_threshold_SDM_trial(threshold_function, drift_vec, ndt, s_v=
     rt = 0
 
     if s_t>0:
-        ndt_t = ndt + (2*s_t*np.random.rand() - s_t)
+        ndt_t = ndt + s_t*np.random.rand()
     else:
         ndt_t = ndt
 
@@ -202,7 +202,7 @@ def simulate_HSDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', de
     rt = 0
 
     if s_t>0:
-        ndt_t = ndt + (2*s_t*np.random.rand() - s_t)
+        ndt_t = ndt + s_t*np.random.rand()
     else:
         ndt_t = ndt
 
@@ -253,7 +253,7 @@ def simulate_custom_threshold_HSDM_trial(threshold_function, drift_vec, ndt, s_v
     rt = 0
 
     if s_t>0:
-        ndt_t = ndt + (2*s_t*np.random.rand() - s_t)
+        ndt_t = ndt + s_t*np.random.rand()
     else:
         ndt_t = ndt
 
@@ -309,7 +309,7 @@ def simulate_PSDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', de
         mu_t = mu
 
     if s_t>0:
-        ndt_t = ndt + (2*s_t*np.random.rand() - s_t)
+        ndt_t = ndt + s_t*np.random.rand()
     else:
         ndt_t = ndt
 
@@ -368,7 +368,7 @@ def simulate_custom_threshold_PSDM_trial(threshold_function, drift_vec, ndt, s_v
         mu_t = mu
 
     if s_t>0:
-        ndt_t = ndt + (2*s_t*np.random.rand() - s_t)
+        ndt_t = ndt + s_t*np.random.rand()
     else:
         ndt_t = ndt
 
