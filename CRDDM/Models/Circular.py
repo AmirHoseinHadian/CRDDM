@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 from scipy.special import iv
 
+from CRDDM.utility.helpers import trapz_1d
 from CRDDM.utility.simulators import simulate_CDM_trial, simulate_custom_threshold_CDM_trial
 from CRDDM.utility.fpts import cdm_short_t_fpt_z, cdm_long_t_fpt_z, ie_fpt_linear, ie_fpt_exponential, ie_fpt_hyperbolic, ie_fpt_custom
-    
 
 class CircularDiffusionModel:
     '''
@@ -155,14 +155,24 @@ class CircularDiffusionModel:
         # first-passage time density of zero drift process
         if self.threshold_dynamic == 'fixed':
             a = threshold
-            s = tt/threshold**2
-            s0 = 0.002
-            s1 = 0.02
-            w = np.minimum(np.maximum((s - s0) / (s1 - s0), 0), 1)
-            
-            fpt_lt = cdm_long_t_fpt_z(tt, threshold, sigma=sigma)
-            fpt_st = 1/threshold**2 * cdm_short_t_fpt_z(tt/threshold**2, 0.1**8/threshold**2)   
-            fpt_z =  (1 - w) * fpt_st + w * fpt_lt
+            if s_t == 0:
+                T = np.arange(0, tt.max()+0.05, 0.05)
+                s = T/threshold**2
+                s0 = 0.002
+                s1 = 0.02
+                w = np.minimum(np.maximum((s - s0) / (s1 - s0), 0), 1)
+                fpt_lt = cdm_long_t_fpt_z(T, threshold, sigma=sigma)
+                fpt_st = 1/threshold**2 * cdm_short_t_fpt_z(T/threshold**2, 0.1**8/threshold**2)   
+                fpt_z =  (1 - w) * fpt_st + w * fpt_lt
+            else:
+                s = tt/threshold**2
+                s0 = 0.002
+                s1 = 0.02
+                w = np.minimum(np.maximum((s - s0) / (s1 - s0), 0), 1)
+                fpt_lt = cdm_long_t_fpt_z(tt, threshold, sigma=sigma)
+                fpt_st = 1/threshold**2 * cdm_short_t_fpt_z(tt/threshold**2, 0.1**8/threshold**2)   
+                fpt_z =  (1 - w) * fpt_st + w * fpt_lt
+
         elif self.threshold_dynamic == 'linear':
             a = threshold - decay*tt
             T_max = min(rt.max(), threshold/decay)
@@ -192,21 +202,52 @@ class CircularDiffusionModel:
             mu_dot_x1 = drift_vec[:, 1] * np.sin(theta)
 
             term1 = a * (mu_dot_x0 + mu_dot_x1)
-            term2 = 0.5 * (drift_vec[:, 0]**2 + drift_vec[:, 1]**2) * tt
+            if s_t == 0:
+                # No non-decision time variability
+                term2 = 0.5 * (drift_vec[:, 0]**2 + drift_vec[:, 1]**2) * tt
+                log_density = term1 - term2 + np.log(fpt_z) - np.log(2*np.pi)
+            else:
+                # With non-decision time variability
+                log_density = np.log(0.1**14) * np.ones(rt.shape[0])
+                eps = np.linspace(0, s_t, max(2, int(s_t//0.02)))
+                for i in range(rt.shape[0]):
+                    if tt[i] - s_t > 0:
+                        integrand = np.exp(- 0.5 * (drift_vec[i, 0]**2 + drift_vec[i, 1]**2) * (tt[i] - eps)) * np.interp(tt[i]-eps, T, fpt_z)/s_t
+                        density = 0.5/np.pi * np.exp(term1[i]) * trapz_1d(integrand, eps)
+                        if density > 0.1**14:
+                            log_density[i] = np.log(density)
 
-            log_density = term1 - term2 + np.log(fpt_z) - np.log(2*np.pi)
         else:
-            # With drift variability            
-            s_v2 = s_v**2
-            x0 =  a * np.cos(theta)
-            x1 =  a * np.sin(theta)
-            fixed = 1/(np.sqrt(s_v2 * tt + 1))
-            exponent0 = -0.5*drift_vec[:, 0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[:, 0])**2 / (s_v2 * (s_v2 * tt + 1))
-            exponent1 = -0.5*drift_vec[:, 1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[:, 1])**2 / (s_v2 * (s_v2 * tt + 1))
+            # With drift variability
+            if s_t == 0:
+                # No non-decision time variability     
+                s_v2 = s_v**2
+                x0 =  a * np.cos(theta)
+                x1 =  a * np.sin(theta)
+                fixed = 1/(np.sqrt(s_v2 * tt + 1))
+                exponent0 = -0.5*drift_vec[:, 0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[:, 0])**2 / (s_v2 * (s_v2 * tt + 1))
+                exponent1 = -0.5*drift_vec[:, 1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[:, 1])**2 / (s_v2 * (s_v2 * tt + 1))
 
-            log_density = 2*np.log(fixed) + exponent0 + exponent1 + np.log(fpt_z) - np.log(2*np.pi)
+                log_density = 2*np.log(fixed) + exponent0 + exponent1 + np.log(fpt_z) - np.log(2*np.pi)
+            else:
+                # With non-decision time variability
+                log_density = np.log(0.1**14) * np.ones(rt.shape[0])
+                eps = np.linspace(0, s_t, max(2, int(s_t//0.02)))
+                s_v2 = s_v**2
+                for i in range(rt.shape[0]):
+                    if tt[i] - s_t > 0:
+                        x0 =  a[i] * np.cos(theta[i])
+                        x1 =  a[i] * np.sin(theta[i])
+                        fixed = 1/(np.sqrt(s_v2 * (tt[i]-eps) + 1))
+                        exponent0 = -0.5*drift_vec[i, 0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[i, 0])**2 / (s_v2 * (s_v2 * (tt[i]-eps) + 1))
+                        exponent1 = -0.5*drift_vec[i, 1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[i, 1])**2 / (s_v2 * (s_v2 * (tt[i]-eps) + 1))
 
-        log_density[rt - ndt <= 0] = np.log(0.1**14)
+                        integrand = fixed**2 * np.exp(exponent0 + exponent1) * np.interp(tt[i]-eps, T, fpt_z)/s_t
+                        density = 1/(2*np.pi) * trapz_1d(integrand, eps)
+                        if density > 0.1**14:
+                            log_density[i] = np.log(density)
+
+        log_density[rt - ndt - s_t <= 0] = np.log(0.1**14)
         log_density = np.maximum(log_density, np.log(0.1**14))
             
         return log_density
