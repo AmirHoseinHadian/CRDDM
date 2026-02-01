@@ -155,23 +155,20 @@ class CircularDiffusionModel:
         # first-passage time density of zero drift process
         if self.threshold_dynamic == 'fixed':
             a = threshold
+            s0 = 0.002
+            s1 = 0.02
             if s_t == 0:
                 s = tt/threshold**2
-                s0 = 0.002
-                s1 = 0.02
                 w = np.minimum(np.maximum((s - s0) / (s1 - s0), 0), 1)
                 fpt_lt = cdm_long_t_fpt_z(tt, threshold, sigma=sigma)
                 fpt_st = 1/threshold**2 * cdm_short_t_fpt_z(tt/threshold**2, 0.1**8/threshold**2)   
-                fpt_z =  (1 - w) * fpt_st + w * fpt_lt
             else:
                 T = np.arange(0, tt.max()+0.05, 0.05)
                 s = T/threshold**2
-                s0 = 0.002
-                s1 = 0.02
                 w = np.minimum(np.maximum((s - s0) / (s1 - s0), 0), 1)
                 fpt_lt = cdm_long_t_fpt_z(T, threshold, sigma=sigma)
                 fpt_st = 1/threshold**2 * cdm_short_t_fpt_z(T/threshold**2, 0.1**8/threshold**2)   
-                fpt_z =  (1 - w) * fpt_st + w * fpt_lt
+            fpt_z =  (1 - w) * fpt_st + w * fpt_lt
         elif self.threshold_dynamic == 'linear':
             a = threshold - decay*tt
             T_max = min(rt.max(), threshold/decay)
@@ -217,7 +214,7 @@ class CircularDiffusionModel:
                             integrand = np.exp(- 0.5 * norm2_drift[i] * (tt[i] - eps)) * np.interp(tt[i]-eps, T, fpt_z)/s_t
                             density = 0.5/np.pi * np.exp(threshold * mu_dot_x[i]) * trapz_1d(integrand, eps)
                         elif self.threshold_dynamic == 'linear':
-                            integrand = np.exp(threshold - decay * (tt[i] - eps) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)) * np.interp(tt[i]-eps, T, fpt_z)/s_t
+                            integrand = np.exp((threshold - decay * (tt[i] - eps)) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)) * np.interp(tt[i]-eps, T, fpt_z)/s_t
                             density = 0.5/np.pi * trapz_1d(integrand, eps)
                         elif self.threshold_dynamic == 'exponential':
                             integrand = np.exp(threshold*np.exp(-decay * (tt[i] - eps)) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)) * np.interp(tt[i]-eps, T, fpt_z)/s_t
@@ -226,7 +223,7 @@ class CircularDiffusionModel:
                             integrand = np.exp(threshold/(1  + decay * (tt[i] - eps)) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)) * np.interp(tt[i]-eps, T, fpt_z)/s_t
                             density = 0.5/np.pi * trapz_1d(integrand, eps)
                         elif self.threshold_dynamic == 'custom':
-                            integrand = np.exp(a(tt[i] - eps) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)) * np.interp(tt[i]-eps, T, fpt_z)/s_t
+                            integrand = np.exp(threshold_function(tt[i] - eps) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)) * np.interp(tt[i]-eps, T, fpt_z)/s_t
                             density = 0.5/np.pi * trapz_1d(integrand, eps)
                         
                         if density > 0.1**14:
@@ -264,8 +261,8 @@ class CircularDiffusionModel:
                             x0 =  (threshold / (1 + decay * (tt[i]-eps))) * np.cos(theta[i])
                             x1 =  (threshold / (1 + decay * (tt[i]-eps))) * np.sin(theta[i])
                         elif self.threshold_dynamic == 'custom':
-                            x0 =  a(tt[i]-eps) * np.cos(theta[i])
-                            x1 =  a(tt[i]-eps) * np.sin(theta[i])
+                            x0 =  threshold_function(tt[i]-eps) * np.cos(theta[i])
+                            x1 =  threshold_function(tt[i]-eps) * np.sin(theta[i])
                         fixed = 1/(np.sqrt(s_v2 * (tt[i]-eps) + 1))
                         exponent0 = -0.5*drift_vec[i, 0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[i, 0])**2 / (s_v2 * (s_v2 * (tt[i]-eps) + 1))
                         exponent1 = -0.5*drift_vec[i, 1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[i, 1])**2 / (s_v2 * (s_v2 * (tt[i]-eps) + 1))
