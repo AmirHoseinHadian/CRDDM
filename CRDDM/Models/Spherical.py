@@ -559,8 +559,8 @@ class ProjectedSphericalDiffusionModel:
 
                         density = trapz_1d(integrand, eps)
                     
-                    if density > 0.1**14:
-                            log_density[i] = np.log(density)
+                        if density > 0.1**14:
+                                log_density[i] = np.log(density)
 
         log_density[rt - ndt <= 0] = np.log(0.1**14)
         log_density = np.maximum(log_density, np.log(0.1**14))
