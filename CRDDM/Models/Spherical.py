@@ -231,9 +231,9 @@ class SphericalDiffusionModel:
             if s_t == 0:
                 # No non-decision time variability
                 s_v2 = s_v**2
-                x2 =  a * np.cos(theta[:, 0])
+                x0 =  a * np.cos(theta[:, 0])
                 x1 =  a * np.sin(theta[:, 0])*np.cos(theta[:, 1]) 
-                x0 =  a * np.sin(theta[:, 0])*np.sin(theta[:, 1])
+                x2 =  a * np.sin(theta[:, 0])*np.sin(theta[:, 1])
                 fixed = 1/(np.sqrt(s_v2 * tt + 1))
                 exponent0 = -0.5*drift_vec[:, 0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[:, 0])**2 / (s_v2 * (s_v2 * tt + 1))
                 exponent1 = -0.5*drift_vec[:, 1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[:, 1])**2 / (s_v2 * (s_v2 * tt + 1))
@@ -246,25 +246,25 @@ class SphericalDiffusionModel:
                 for i in range(rt.shape[0]):
                     if tt[i] - s_t > 0:
                         if self.threshold_dynamic == 'fixed':
-                            x2 = threshold * np.cos(theta[i, 0])
+                            x0 = threshold * np.cos(theta[i, 0])
                             x1 = threshold * np.sin(theta[i, 0])*np.cos(theta[i, 1]) 
-                            x0 = threshold * np.sin(theta[i, 0])*np.sin(theta[i, 1])
+                            x2 = threshold * np.sin(theta[i, 0])*np.sin(theta[i, 1])
                         elif self.threshold_dynamic == 'linear':
-                            x2 = (threshold - decay * (tt[i]-eps)) * np.cos(theta[i, 0])
+                            x0 = (threshold - decay * (tt[i]-eps)) * np.cos(theta[i, 0])
                             x1 = (threshold - decay * (tt[i]-eps)) * np.sin(theta[i, 0])*np.cos(theta[i, 1]) 
-                            x0 = (threshold - decay * (tt[i]-eps)) * np.sin(theta[i, 0])*np.sin(theta[i, 1])
+                            x2 = (threshold - decay * (tt[i]-eps)) * np.sin(theta[i, 0])*np.sin(theta[i, 1])
                         elif self.threshold_dynamic == 'exponential':
-                            x2 = (threshold * np.exp(-decay * (tt[i]-eps))) * np.cos(theta[i, 0])
+                            x0 = (threshold * np.exp(-decay * (tt[i]-eps))) * np.cos(theta[i, 0])
                             x1 = (threshold * np.exp(-decay * (tt[i]-eps))) * np.sin(theta[i, 0])*np.cos(theta[i, 1]) 
-                            x0 = (threshold * np.exp(-decay * (tt[i]-eps))) * np.sin(theta[i, 0])*np.sin(theta[i, 1])
+                            x2 = (threshold * np.exp(-decay * (tt[i]-eps))) * np.sin(theta[i, 0])*np.sin(theta[i, 1])
                         elif self.threshold_dynamic == 'hyperbolic':
-                            x2 = (threshold / (1 + decay * (tt[i]-eps))) * np.cos(theta[i, 0])
+                            x0 = (threshold / (1 + decay * (tt[i]-eps))) * np.cos(theta[i, 0])
                             x1 = (threshold / (1 + decay * (tt[i]-eps))) * np.sin(theta[i, 0])*np.cos(theta[i, 1]) 
-                            x0 = (threshold / (1 + decay * (tt[i]-eps))) * np.sin(theta[i, 0])*np.sin(theta[i, 1])
+                            x2 = (threshold / (1 + decay * (tt[i]-eps))) * np.sin(theta[i, 0])*np.sin(theta[i, 1])
                         elif self.threshold_dynamic == 'custom':
-                            x2 = threshold_function(tt[i]-eps) * np.cos(theta[i, 0])
+                            x0 = threshold_function(tt[i]-eps) * np.cos(theta[i, 0])
                             x1 = threshold_function(tt[i]-eps) * np.sin(theta[i, 0])*np.cos(theta[i, 1]) 
-                            x0 = threshold_function(tt[i]-eps) * np.sin(theta[i, 0])*np.sin(theta[i, 1])
+                            x2 = threshold_function(tt[i]-eps) * np.sin(theta[i, 0])*np.sin(theta[i, 1])
                         fixed = 1/(np.sqrt(s_v2 * (tt[i] - eps) + 1))
                         exponent0 = -0.5*drift_vec[i, 0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[i, 0])**2 / (s_v2 * (s_v2 * (tt[i] - eps) + 1))
                         exponent1 = -0.5*drift_vec[i, 1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[i, 1])**2 / (s_v2 * (s_v2 * (tt[i] - eps) + 1))
