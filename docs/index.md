@@ -8,6 +8,10 @@ The package provides fast and numerically stable likelihood evaluation for conti
 - Circular scales (e.g., color wheels),
 - Two-dimensional scales (e.g., 2D planes).
 
+![Examples of continuous-report decision tasks.](imgs/Continuous_tasks.png "Examples of continuous-report decision tasks.")
+
+
+![Diffusion models of continuous response tasks.](imgs/Diffusion_models.png "Diffusion models of continuous response tasks.")
 CRDDM is designed for researchers in cognitive science, mathematical psychology, and neuroscience who work with diffusion models of continuous responses.
 
 
