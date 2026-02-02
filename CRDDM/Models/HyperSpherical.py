@@ -66,17 +66,17 @@ class HyperSphericalDiffusionModel:
         elif drift_vec.shape[0] != n_sample:
             raise ValueError("Number of rows in drift_vec must be equal to n_sample")
         
-        if type(ndt) is float or type(ndt) is int:
+        if isinstance(ndt, (float, np.floating)) or isinstance(ndt, (int, np.integer)):
             ndt = np.full((n_sample,), ndt)
         elif len(ndt) != n_sample:
             raise ValueError("Length of ndt must be equal to n_sample")
         
-        if type(threshold) is float or type(threshold) is int:
+        if isinstance(threshold, (float, np.floating)) or isinstance(threshold, (int, np.integer)):
             threshold = np.full((n_sample,), threshold)
         elif len(threshold) != n_sample:
             raise ValueError("Length of threshold must be equal to n_sample")
         
-        if type(decay) is float or type(decay) is int:
+        if isinstance(decay, (float, np.floating)) or isinstance(decay, (int, np.integer)):
             decay = np.full((n_sample,), decay)
         elif len(decay) != n_sample:
             raise ValueError("Length of decay must be equal to n_sample")
