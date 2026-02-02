@@ -8,7 +8,7 @@ to data from an orientation judgment task reported in [Kvam (2019)](https://doi.
 In this task, participants viewed a dynamic Gabor patch and reported the **average orientation**
 of the stimulus by clicking on a circular response scale:
 
-![alt text](../imgs/OJT.png "Continuous report visual working memory task.")
+![Continuous-report visual working memory task.](../imgs/OJT.png "Continuous-report visual working memory task.")
 
 The experimental design includes two orthogonal manipulations:
 
