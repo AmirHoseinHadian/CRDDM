@@ -18,7 +18,7 @@ nav:
   - Installation: installation.md
   - Tutorials:
       - Quickstart: tutorials/quickstart.md
-      - Design Specification: tutorials/design_specification.md
+      - Design Specification: tutorials/design_spesification.md
       - Custom Mapping Function: tutorials/custom_mapping_function.md
       - Collapsing Threshold Models: tutorials/collapsing_threshold_models.md
       - Custom Threshold Dynamics: tutorials/custom_threshold_dynamics.md
@@ -41,6 +41,7 @@ plugins:
             docstring_section_style: table
 
 markdown_extensions:
+  - tables
   - admonition
   - pymdownx.superfences
   - pymdownx.highlight
