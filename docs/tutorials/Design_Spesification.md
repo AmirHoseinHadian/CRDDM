@@ -9,7 +9,6 @@ In this task, participants viewed a dynamic Gabor patch and reported the **avera
 of the stimulus by clicking on a circular response scale:
 
 ![alt text](../imgs/OJT.png "Continuous report visual working memory task.")
-<!-- <img src="../imgs/OJT.png" alt="Continuous report orientation judgement task." style="width:60%; height:auto;"> -->
 
 The experimental design includes two orthogonal manipulations:
 
