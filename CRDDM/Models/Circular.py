@@ -43,8 +43,6 @@ class CircularDiffusionModel:
             The decay rate of the threshold (default is 0)
         threshold_function : callable, if threshold_dynamic is 'custom'
             A function that takes time t and returns the threshold at time t
-        dt_threshold_function : callable, if threshold_dynamic is 'custom'
-            A function that takes time t and returns the derivative of the threshold at time t
         s_v : float, optional
             The standard deviation of drift variability (default is 0)
         s_t : float, optional
