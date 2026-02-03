@@ -12,6 +12,16 @@ theme:
     - navigation.sections
     - content.code.copy
     - search.highlight
+    - navigation.tracking
+    - navigation.tabs.sticky
+    - navigation.path
+    - navigation.top
+    - header.autohide
+    - announce.dismiss
+    - navigation.expand
+  font:
+    text: Inter
+    code: JetBrains Mono
 
 nav:
   - Home: index.md
@@ -54,4 +64,5 @@ extra_javascript:
 
 extra_css:
   - https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css
+  - stylesheets/extra.css
 
