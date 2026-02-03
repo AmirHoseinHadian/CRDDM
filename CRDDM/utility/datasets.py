@@ -14,7 +14,7 @@ def load_fennell2023():
         A dataframe containing the data with columns: 'subjectNumber', 'blockNumber', 'trialNumber', 'rt', 'numberOfStimulus', 'responseError'
     '''
 
-    data_path = os.path.join(os.path.dirname(os.path.dirname(__dir__)), "data", "Fennell2023_exp1.csv")
+    data_path = os.path.join(os.path.dirname(os.path.dirname(__dir__)), "data", "Fennell2023_exp4.csv")
 
     data = pd.read_csv(data_path, index_col=0)
     return data
