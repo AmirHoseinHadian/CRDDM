@@ -67,7 +67,7 @@ Discrete theories of visual working memory (e.g., [Zhang and Luck, 2008](https:/
 
 [Zhang and Luck (2008)](https://doi.org/10.1038/nature06860) formalized this idea in a hybrid discrete model, in which the **precision of memory** representations decreases with increasing set size up to the capacity limit. In the diffusion modeling framework, this reduction in precision can be captured by allowing the **drift magnitude** of the diffusion process to vary across set sizes. Once the capacity limit is exceeded, additional items are assumed not to be stored in working memory; responses to these items are therefore attributed to **guessing**, while the precision of stored items remains constant.
 
-![alt text](../imgs/two_comp_mixture.png "Two-component mixture model")
+![alt text](../imgs/Two_comp_mixture.png "Two-component mixture model")
 
 Within our mixture modeling approach, this theory motivates a process in which guessing occurs primarily when the number of presented stimuli exceeds working memory capacity (typically assumed to be around three items). Accordingly, for trials with `setSize=2`, the probability of guessing is fixed to zero.
 
