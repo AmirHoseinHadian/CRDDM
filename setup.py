@@ -4,6 +4,7 @@ from CRDDM.version import *
 from setuptools import setup, find_packages
 
 PACKAGES = find_packages()
+print(PACKAGES)
 
 # Get version and release info, which is all stored in CRDDM/version.py
 ver_file = os.path.join('CRDDM', 'version.py')
