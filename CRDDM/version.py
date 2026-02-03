@@ -50,7 +50,7 @@ for usage, and a DISCLAIMER OF ALL WARRANTIES.
 
 All trademarks referenced herein are property of their respective holders.
 
-Copyright (c) 2025--, Amir Hosein Hadian,
+Copyright (c) 2025--, Amir Hosein Hadian Rasanan,
 University of Basel.
 """
 
@@ -70,4 +70,4 @@ MINOR = _version_minor
 MICRO = _version_micro
 VERSION = __version__
 PACKAGE_DATA = {'CRDDM': [pjoin('data', '*')]}
-REQUIRES = ["numpy", "scipy"]
+REQUIRES = ["numpy", "scipy", "numba", "pandas"]
