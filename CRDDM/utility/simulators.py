@@ -383,7 +383,7 @@ def simulate_custom_threshold_PSDM_trial(threshold_function, drift_vec, ndt, s_v
 
 
 @jit(nopython=True)
-def simulate_PHSDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
+def simulate_PHSDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
     '''
     input:
         threshold: a positive floating number
@@ -398,7 +398,55 @@ def simulate_PHSDM_trial(threshold, drift_vec, ndt, decay=0, s_v=0, s_t=0, sigma
         rt: response time in seconds
         theta: response angle between [0, pi]
     '''
-    pass  # to be implemented later
+
+    x = np.zeros((4,))
+    muw = drift_vec[0]
+    muz = drift_vec[1]
+    eta = drift_vec[2]
+    
+    norm_mu = np.sqrt(eta**2 + muz**2 + muw**2)
+    theta1_mu = np.arctan2(eta, muw)
+    theta2_mu = np.arctan2(eta, muz)
+    
+    rt = 0
+    rphi = np.pi/4 # it is not important (just a dummpy value)
+    mux = norm_mu * np.sin(theta1_mu) * np.sin(theta2_mu) * np.cos(rphi)
+    muy = norm_mu * np.sin(theta1_mu) * np.sin(theta2_mu) * np.sin(rphi)
+
+    mu = np.array([mux, muy, muz, muw])
+
+    if s_v>0:
+        mu_t = mu + s_v*np.random.randn(4)
+    else:
+        mu_t = mu
+
+    if s_t>0:
+        ndt_t = ndt + s_t*np.random.rand()
+    else:
+        ndt_t = ndt
+
+    if threshold_dynamic == 'fixed':
+        while np.sqrt(x[0]**2 + x[1]**2 + x[2]**2 + x[3]**2) < threshold:
+            x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(4)
+            rt += dt
+    elif threshold_dynamic == 'linear':
+        while np.sqrt(x[0]**2 + x[1]**2 + x[2]**2 + x[3]**2) < threshold - decay*rt:
+            x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(4)
+            rt += dt
+    elif threshold_dynamic == 'exponential':
+        while np.sqrt(x[0]**2 + x[1]**2 + x[2]**2 + x[3]**2) < threshold * np.exp(-decay*rt):
+            x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(4)
+            rt += dt
+    elif threshold_dynamic == 'hyperbolic':
+        while np.sqrt(x[0]**2 + x[1]**2 + x[2]**2 + x[3]**2) < threshold / (1 + decay*rt):
+            x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(4)
+            rt += dt
+    
+    theta1 = np.arctan2(np.sqrt(x[0]**2 + x[1]**2), x[2])
+    theta2 = np.arctan2(np.sqrt(x[0]**2 + x[1]**2), x[3])   
+    
+    return ndt_t+rt, (theta1, theta2)
+    
 
 def simulate_custom_threshold_PHSDM_trial(threshold_function, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001):
     pass # To be implemented later

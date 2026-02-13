@@ -302,7 +302,51 @@ class ProjectedHyperSphericalDiffusionModel:
             raise ValueError("\'threshold_dynamic\' must be one of \'fixed\', \'linear\', \'exponential\', \'hyperbolic\', or \'custom\'. However, got \'{}\'".format(threshold_dynamic))
 
     def simulate(self, drift_vec, ndt, threshold=1, decay=0, threshold_function=None, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):
-        pass # To be implemented
+        RT = np.empty((n_sample,))
+        Choice = np.empty((n_sample, 2))
+
+        if drift_vec.ndim == 1:
+            drift_vec = drift_vec * np.ones((n_sample, 3))
+        elif drift_vec.shape[0] != n_sample:
+            raise ValueError("Number of rows in drift_vec must be equal to n_sample")
+        
+        if isinstance(ndt, (float, np.floating)) or isinstance(ndt, (int, np.integer)):
+            ndt = np.full((n_sample,), ndt)
+        elif len(ndt) != n_sample:
+            raise ValueError("Length of ndt must be equal to n_sample")
+        
+        if isinstance(threshold, (float, np.floating)) or isinstance(threshold, (int, np.integer)):
+            threshold = np.full((n_sample,), threshold)
+        elif len(threshold) != n_sample:
+            raise ValueError("Length of threshold must be equal to n_sample")
+        
+        if isinstance(decay, (float, np.floating)) or isinstance(decay, (int, np.integer)):
+            decay = np.full((n_sample,), decay)
+        elif len(decay) != n_sample:
+            raise ValueError("Length of decay must be equal to n_sample")
+        
+        if threshold_function is None and self.threshold_dynamic == 'custom':
+            raise ValueError("threshold_function must be provided when threshold_dynamic is 'custom'")
+        
+        if threshold_function is not None and self.threshold_dynamic != 'custom':
+            raise ValueError("threshold_function should be None when threshold_dynamic is not 'custom'")
+        
+        if s_v < 0:
+            raise ValueError("s_v must be non-negative")
+        if s_t < 0:
+            raise ValueError("s_t must be non-negative")
+
+        if self.threshold_dynamic != 'custom':
+            for n in range(n_sample):
+                RT[n], Choice[n, :] = simulate_PHSDM_trial(threshold[n], drift_vec[n, :].astype(np.float64), ndt[n],
+                                                           threshold_dynamic=self.threshold_dynamic, 
+                                                           decay=decay[n], s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
+        else:
+            for n in range(n_sample):
+                RT[n], Choice[n, :] = simulate_custom_threshold_PHSDM_trial(threshold_function,
+                                                                            drift_vec[n, :].astype(np.float64), ndt[n], 
+                                                                            s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
+        return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response1', 'response2'])
 
     def joint_lpdf(self, rt, theta, threshold, decay, drift_vec, ndt, s_v=0, s_t=0, sigma=1):
         pass # To be implemented
