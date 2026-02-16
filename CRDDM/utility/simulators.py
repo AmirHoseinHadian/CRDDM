@@ -442,8 +442,8 @@ def simulate_PHSDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', d
             x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(4)
             rt += dt
     
-    theta1 = np.arctan2(np.sqrt(x[0]**2 + x[1]**2), x[2])
-    theta2 = np.arctan2(np.sqrt(x[0]**2 + x[1]**2), x[3])   
+    theta1 = np.arctan2(np.sqrt(x[0]**2 + x[1]**2), x[3])
+    theta2 = np.arctan2(np.sqrt(x[0]**2 + x[1]**2), x[2])   
     
     return ndt_t+rt, (theta1, theta2)
     

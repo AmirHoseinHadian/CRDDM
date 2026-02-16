@@ -348,5 +348,49 @@ class ProjectedHyperSphericalDiffusionModel:
                                                                             s_v=s_v, s_t=s_t, sigma=sigma, dt=dt)
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response1', 'response2'])
 
-    def joint_lpdf(self, rt, theta, threshold, decay, drift_vec, ndt, s_v=0, s_t=0, sigma=1):
-        pass # To be implemented
+    def joint_lpdf(self, rt, theta, drift_vec, ndt, threshold, decay=0, threshold_function=None, dt_threshold_function=None, s_v=0, s_t=0, sigma=1):
+        if drift_vec.ndim == 1:
+            drift_vec = drift_vec * np.ones((rt.shape[0], 3))
+
+        if drift_vec.shape[1] != 3 or drift_vec.ndim != 2:
+            raise ValueError("drift_vec must have shape (3,) or (n_samples, 3)")
+        
+        tt = np.maximum(rt - ndt, 0)
+
+        # first-passage time density of zero drift process
+        if self.threshold_dynamic == 'fixed':
+            a = threshold
+            s0 = 0.002
+            s1 = 0.02
+            if s_t == 0:
+                s = tt/threshold**2
+                w = np.minimum(np.maximum((s - s0) / (s1 - s0), 0), 1)
+                fpt_lt = hsdm_long_t_fpt_z(tt, threshold, sigma=sigma)
+                fpt_st = 1/threshold**2 * hsdm_short_t_fpt_z(tt/threshold**2, 0.1**8/threshold**2)   
+            else:
+                T = np.arange(0, tt.max()+0.05, 0.05)
+                s = T/threshold**2
+                w = np.minimum(np.maximum((s - s0) / (s1 - s0), 0), 1)
+                fpt_lt = hsdm_long_t_fpt_z(T, threshold, sigma=sigma)
+                fpt_st = 1/threshold**2 * hsdm_short_t_fpt_z(T/threshold**2, 0.1**8/threshold**2)   
+            fpt_z =  (1 - w) * fpt_st + w * fpt_lt
+
+        fpt_z = np.maximum(fpt_z, 0.1**14)
+        norm_mu = np.sqrt(drift_vec[:, 0]**2 + drift_vec[:, 1]**2 + drift_vec[:, 2]**2)
+        
+        theta1_mu = np.arctan2(drift_vec[:, 2], drift_vec[:, 0])
+        theta2_mu = np.arctan2(drift_vec[:, 2], drift_vec[:, 1])
+
+        # No non-decision time variability
+        x0 = np.cos(theta1_mu) * np.cos(theta[:, 0])
+        x1 = np.sin(theta1_mu) * np.sin(theta[:, 0]) * np.cos(theta2_mu) * np.cos(theta[:, 1])
+        term1 = np.exp(a * norm_mu * (x0 + x1) / sigma**2)
+        term2 = iv(0, a * norm_mu * np.sin(theta1_mu) * np.sin(theta[:, 0]) * np.sin(theta2_mu) * np.sin(theta[:, 1])/sigma**2)
+        term3 = -0.5 * norm_mu**2 * tt
+        
+        log_density = np.log(2*np.pi) + np.log(term1) + np.log(term2) + term3 + np.log(fpt_z)
+
+        log_density[rt - ndt <= 0] = np.log(0.1**14)
+        log_density = np.maximum(log_density, np.log(0.1**14))
+            
+        return log_density
