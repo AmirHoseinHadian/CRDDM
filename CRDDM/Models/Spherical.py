@@ -484,7 +484,7 @@ class ProjectedSphericalDiffusionModel:
                             term2 = iv(0, threshold * norm_mu[i] * np.sin(theta_mu[i]) * np.sin(theta[i]))
                             term3 = -0.5 * norm_mu[i]**2 * (tt[i] - eps)
                             integrand = np.exp(term3) * np.interp(tt[i]-eps, T, fpt_z)/s_t
-                            density = 0.5/np.pi * term1 * term2 * trapz_1d(integrand, eps)
+                            density = 2*np.pi * term1 * term2 * trapz_1d(integrand, eps)
                         elif self.threshold_dynamic == 'linear':
                             term1 = np.exp((threshold - decay * (tt[i] - eps)) * norm_mu[i] * np.cos(theta_mu[i]) * np.cos(theta[i]))
                             term2 = iv(0, (threshold - decay * (tt[i] - eps)) * norm_mu[i] * np.sin(theta_mu[i]) * np.sin(theta[i]))
