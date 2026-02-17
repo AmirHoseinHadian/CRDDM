@@ -1,75 +1,112 @@
-## Is CRDDM right for my data?
+# Data Requirements and Model Selection
 
-Use the checklist below to quickly determine whether CRDDM is appropriate for your dataset:
+This guide explains:
 
-### ✔ Suitable for CRDDM if:
-
-- You have **trial-level response times** for each decision.
-- You have **trial-level continuous response values** (e.g., angle, position, 2D coordinate).
-- Response times meaningfully reflect **decision dynamics** (i.e., evidence accumulation).
-- You are interested in modeling **latent decision processes** (e.g., drift rate, threshold, non-decision time).
-- Your task involves a well-defined response geometry (circular, bounded, or multi-dimensional).
-
-### ✖ CRDDM may not be appropriate if:
-
-- Response times were **not recorded**.
-- Response times are artificially constrained (e.g., fixed response windows, delayed response prompts).
-- The task was not designed to measure **decision latency**.
-- You are only interested in modeling response error distributions without reference to decision time.
-
-If you are unsure whether diffusion-based modeling is appropriate for your task,
-consider whether response times are theoretically meaningful in your paradigm.
-If not, alternative descriptive or static models may be more suitable.
-
-
-Follow the steps below:
-
-**1️⃣ Do you have trial-level response times (RTs) for each decision?**
-
-- ❌ **No** → CRDDM is not appropriate.  
-  Consider descriptive or static models of response distributions.
-
-- ✔ **Yes** → Go to Step 2.
+1. What type of data is required to use CRDDM models.
+2. Which CRDDM model is appropriate for different response geometries.
 
 ---
 
-**2️⃣ Do you have trial-level continuous response values?**  
-(e.g., angle, slider position, 2D coordinate)
+## 1. What Data Do You Need?
 
-- ❌ **No** → CRDDM is not appropriate.  
-  Traditional discrete-choice diffusion models may be more suitable.
+CRDDM implements diffusion models that jointly explain **response time (RT)** and **continuous response location**.  
+To use these models appropriately, your dataset must contain:
 
-- ✔ **Yes** → Go to Step 3.
+### Required (trial-level)
+
+- **Response time (RT)** for each decision  
+- **Continuous response value** for each decision (e.g., angle, slider position, 2D coordinate)
+
+Each row of your dataset should correspond to a single trial.
+
+### Not Suitable for CRDDM
+
+CRDDM may *not* be appropriate if:
+
+- Response times were not recorded.
+- Response times are artificially constrained (e.g., fixed response windows).
+- The task design makes response times unrelated to decision dynamics.
+- You are only interested in modeling response error distributions without response times.
+
+CRDDM assumes that response times reflect **evidence accumulation dynamics**.
 
 ---
 
-**3️⃣ Do response times meaningfully reflect decision dynamics?**  
-(i.e., are they not artificially constrained, delayed, or fixed by design?)
+## 2. Model Selection by Response Scale
 
-- ❌ **No** → Diffusion-based modeling may not be theoretically justified.
+CRDDM provides different diffusion models depending on the geometry of the response scale.
 
-- ✔ **Yes** → Go to Step 4.
+### A. Circular Response Scales
+
+**Examples:**
+- Color judgment tasks (using a color wheel)
+- Orientation judgment tasks
+
+**Suitable Model:**
+- `CircularDiffusionModel`
+
+Use when responses lie on a circle (0–2π or 0–360°).
 
 ---
 
-**4️⃣ Are you interested in modeling latent decision processes?**  
-(e.g., drift rate, threshold, non-decision time, collapsing boundaries)
+### B. Circular Response Scales with Multimodal Response Error
 
-- ❌ **No** → A descriptive model may be sufficient.
+**Examples:**
+- Random dot motion task
+- Color judgment tasks (using a color wheel)
 
-- ✔ **Yes** → ✅ **CRDDM is likely appropriate for your data.**
+**Suitable Models:**
+- `SphericalDiffusionModel`
+- `HyperSphericalDiffusionModel`
 
-``` mermaid
-graph 
-    A[Start] --> B{Do you have trial-level<br/>response times?};
-    B -- No --> B0[CRDDM not appropriate<br/>Use models that do not rely on RTs];
-    B -- Yes --> C{Do you have trial-level<br/>continuous responses?};
-    C -- No --> C0[CRDDM not appropriate<br/>Consider discrete-choice diffusion models]
-    C -- Yes --> D{Are RTs meaningful measures<br/>of decision latency?}
+Use when responses lie on a circle (0–2π or 0–360°) and the **response error is multimodal**.
 
-    D -- No --> D0[Diffusion modeling may not be justified<br/>RTs may not reflect accumulation dynamics]
-    D -- Yes --> E{Do you want to model latent<br/>decision processes?}
+---
 
-    E -- No --> E0[Descriptive or static models may be sufficient]
-    E -- Yes --> F([CRDDM is likely appropriate])
-```
+### C. One-Dimensional Bounded Scales
+
+**Examples:**
+- Numerosity estimation tasks
+- Pricing tasks
+
+**Suitable Model:**
+- `ProjectedSphericalDiffusionModel`
+
+Use when responses are bounded but not circular (i.e., endpoints are distinct). For example, sliders with lower and upper bounds or arc-shaped are suitable.
+
+---
+
+### D. Two-Dimensional Bounded Planes
+
+**Examples:**
+- Centriod estimation tasks
+- Spatial working memory tasks
+
+**Suitable Model:**
+- `ProjectedHyperSphericalDiffusionModel`
+
+Use when responses are continuous in 2D and bounded within a region.
+
+---
+
+## 3. Quick Model Selection Table
+
+| Response Geometry          | Example Task                          | CRDDM Model                |
+|----------------------------|---------------------------------------|----------------------------|
+| Circular (1D wrapped)      | Color or orientation judgement        | CircularDiffusionModel     |
+| Circular (1D wrapped)      | Random dot motion                     | Spherical / HyperSpherical |
+| 1D bounded (not wrapped)   | Estimation, pricing                   | ProjectedSpherical         |
+| 2D bounded plane           | Centriod estimation                   | ProjectedHyperSpherical    |
+
+---
+
+## 4. Summary
+
+CRDDM is appropriate when:
+
+- The response scale is continuous.
+- You have trial-level RTs.
+- You have trial-level continuous responses.
+- RTs meaningfully reflect decision latency.
+
+Choosing the correct model depends entirely on the **structure of the response space**.
