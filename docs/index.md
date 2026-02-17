@@ -7,6 +7,21 @@ The package provides fast and numerically stable likelihood evaluation for conti
 
 CRDDM is designed for researchers in **cognitive science**, **mathematical psychology**, and **neuroscience** who study decision-making with continuous-response spaces. 
 
+!!! Note "Required data: response time and response location"
+    CRDDM implements diffusion-based models that jointly explain **response times** and
+    **continuous response locations**. To use these models appropriately, your dataset must include:
+
+    - a response time (RT) for each decision, and  
+    - a continuous response value (e.g., angle, position, 2D coordinate) for each decision.
+
+    These models are designed for tasks in which response times reflect the dynamics of
+    evidence accumulation. If response times are not recorded, are heavily constrained by the task
+    design (e.g., delayed response prompts, fixed response windows), or are not theoretically
+    meaningful measures of decision latency, diffusion-based modeling may not be appropriate.
+
+    In such cases, models that focus solely on response error distributions (e.g., descriptive or
+    static mixture models) may be more suitable.
+
 ## **Features**
 **1. Support for diverse continuous response scales:**
 
@@ -48,7 +63,7 @@ CRDDM includes four classes of multi-dimensional diffusion models, tailored to d
 ## **Credits**
 
 This package was developed by me, [Amir Hosein Hadian Rasanan](https://scholar.google.com/citations?hl=en&user=qbOoaykAAAAJ),
-with getting support from [Dr. Nathan J Evans](https://scholar.google.com/citations?user=2hG7r90AAAAJ&hl=en) and [Prof. Dr. Jörg Rieskamp](https://scholar.google.com/citations?user=6Y5X1xUAAAAJ&hl=en). 
+with support from [Dr. Nathan J Evans](https://scholar.google.com/citations?user=2hG7r90AAAAJ&hl=en) and [Prof. Dr. Jörg Rieskamp](https://scholar.google.com/citations?user=6Y5X1xUAAAAJ&hl=en). 
 
 When using this package or part of the code for your own research, I ask you to cite us:
 
