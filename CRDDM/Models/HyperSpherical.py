@@ -438,6 +438,25 @@ class ProjectedHyperSphericalDiffusionModel:
                 fpt_lt = hsdm_long_t_fpt_z(T, threshold, sigma=sigma)
                 fpt_st = 1/threshold**2 * hsdm_short_t_fpt_z(T/threshold**2, 0.1**8/threshold**2)   
             fpt_z =  (1 - w) * fpt_st + w * fpt_lt
+        elif self.threshold_dynamic == 'linear':
+            a = threshold - decay*tt
+            T_max = min(rt.max(), threshold/decay)
+            g_z, T = ie_fpt_linear(threshold, decay, 4, 0.000001, dt=0.02, T_max=T_max)
+            fpt_z = np.interp(tt, T, g_z)
+        elif self.threshold_dynamic == 'exponential':
+            a = threshold * np.exp(-decay*tt)
+            g_z, T = ie_fpt_exponential(threshold, decay, 4, 0.000001, dt=0.02, T_max=rt.max())
+            fpt_z = np.interp(tt, T, g_z)
+        elif self.threshold_dynamic == 'hyperbolic':
+            a = threshold / (1 + decay*tt)
+            g_z, T = ie_fpt_hyperbolic(threshold, decay, 4, 0.000001, dt=0.02, T_max=rt.max())
+            fpt_z = np.interp(tt, T, g_z)
+        elif self.threshold_dynamic == 'custom':
+            threshold_function2 = lambda t: threshold_function(t)**2
+            dt_threshold_function2 = lambda t: 2 * dt_threshold_function(t) * threshold_function(t)
+            a = threshold_function(tt)
+            g_z, T = ie_fpt_custom(threshold_function2, dt_threshold_function2, 4, 0.000001, dt=0.02, T_max=rt.max())
+            fpt_z = np.interp(tt, T, g_z)
 
         fpt_z = np.maximum(fpt_z, 0.1**14)
         norm_mu = np.sqrt(drift_vec[:, 0]**2 + drift_vec[:, 1]**2 + drift_vec[:, 2]**2)
@@ -445,14 +464,29 @@ class ProjectedHyperSphericalDiffusionModel:
         theta1_mu = np.arctan2(drift_vec[:, 2], drift_vec[:, 0])
         theta2_mu = np.arctan2(drift_vec[:, 2], drift_vec[:, 1])
 
-        # No non-decision time variability
-        x0 = np.cos(theta1_mu) * np.cos(theta[:, 0])
-        x1 = np.sin(theta1_mu) * np.sin(theta[:, 0]) * np.cos(theta2_mu) * np.cos(theta[:, 1])
-        term1 = np.exp(a * norm_mu * (x0 + x1) / sigma**2)
-        term2 = iv(0, a * norm_mu * np.sin(theta1_mu) * np.sin(theta[:, 0]) * np.sin(theta2_mu) * np.sin(theta[:, 1])/sigma**2)
-        term3 = -0.5 * norm_mu**2 * tt
-        
-        log_density = np.log(2*np.pi) + np.log(term1) + np.log(term2) + term3 + np.log(fpt_z)
+        # Girsanov:
+        if s_v == 0:
+            # No drift variability
+            if s_t == 0:
+                # No non-decision time variability
+                x0 = np.cos(theta1_mu) * np.cos(theta[:, 0])
+                x1 = np.sin(theta1_mu) * np.sin(theta[:, 0]) * np.cos(theta2_mu) * np.cos(theta[:, 1])
+                term1 = np.exp(a * norm_mu * (x0 + x1) / sigma**2)
+                term2 = iv(0, a * norm_mu * np.sin(theta1_mu) * np.sin(theta[:, 0]) * np.sin(theta2_mu) * np.sin(theta[:, 1])/sigma**2)
+                term3 = -0.5 * norm_mu**2 * tt
+                
+                log_density = np.log(2*np.pi) + np.log(term1) + np.log(term2) + term3 + np.log(fpt_z)
+            else:
+                # With non-decision time variability
+                pass
+        else:
+            # With drift variability
+            if s_t == 0:
+                # No non-decision time variability
+                pass
+            else:
+                # With non-decision time variability
+                pass
 
         log_density[rt - ndt <= 0] = np.log(0.1**14)
         log_density = np.maximum(log_density, np.log(0.1**14))
