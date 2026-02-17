@@ -4,19 +4,35 @@ from numba import jit
 @jit(nopython=True)
 def simulate_CDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
     '''
-    input:
-        threshold: a positive floating number
-        drift_vec: drift vector; a two-dimensional array
-        ndt: a positive floating number
-        threshold_dynamic: type of threshold collapse ('fixed', 'linear', 'exponential', or 'hyperbolic')
-        decay: decay rate of the collapsing boundary
-        s_v: standard deviation of drift rate variability
-        s_t: range of non-decision time variability
-        sigma: standard deviation of the diffusion process
-        dt: time step for the simulation
-    returns:
-        rt: response time in seconds
-        theta: response angle between [-pi, pi]
+    Simulate a single trial of the circular diffusion model (CDM).
+
+    Parameters
+    ----------
+    threshold : float
+        A positive floating number representing the decision threshold.
+    drift_vec : array_like, shape (2,)
+        A two-dimensional array representing the drift vector.
+    ndt : float
+        A positive floating number representing the non-decision time.
+    threshold_dynamic : {'fixed', 'linear', 'exponential', 'hyperbolic'}, optional
+        Type of threshold collapse. Default is 'fixed'.
+    decay : float, optional
+        Decay rate of the collapsing boundary. Default is 0.
+    s_v : float, optional
+        Standard deviation of drift rate variability. Default is 0.
+    s_t : float, optional
+        Range of non-decision time variability. Default is 0.
+    sigma : float, optional
+        Diffusion coefficient (standard deviation of the diffusion process). Default is 1.
+    dt : float, optional
+        Time step for the simulation. Default is 0.001. 
+
+    Returns
+    -------
+    rt : float
+        Response time in seconds.
+    theta : float
+        Response angle between [-pi, pi].
     '''
     x = np.zeros((2,))
     
@@ -54,17 +70,33 @@ def simulate_CDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', dec
 
 def simulate_custom_threshold_CDM_trial(threshold_function, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001):
     '''
-    input:
-        threshold_function: a function that takes time t and returns the threshold at time t
-        drift_vec: drift vector; a two-dimensional array
-        ndt: a positive floating number
-        s_v: standard deviation of drift rate variability
-        s_t: range of non-decision time variability
-        sigma: standard deviation of the diffusion process
-        dt: time step for the simulation
-    returns:
-        rt: response time in seconds
-        theta: response angle between [-pi, pi]
+    Simulate a single trial of the circular diffusion model (CDM) with a user defined threshold function.
+
+    Parameters
+    ----------
+    threshold_function : callable
+        A function that takes time t and returns the threshold at time t.
+    drift_vec : array_like, shape (2,)
+        A two-dimensional array representing the drift vector.
+    ndt : float
+        A positive floating number representing the non-decision time.
+    drift_vec : array_like, shape (2,)
+        A two-dimensional array representing the drift vector.
+    s_v : float, optional
+        Standard deviation of drift rate variability. Default is 0.
+    s_t : float, optional
+        Range of non-decision time variability. Default is 0.
+    sigma : float, optional
+        Diffusion coefficient (standard deviation of the diffusion process). Default is 1.
+    dt : float, optional
+        Time step for the simulation. Default is 0.001. 
+
+    Returns
+    -------
+    rt : float
+        Response time in seconds.
+    theta : float
+        Response angle between [-pi, pi].
     '''
     x = np.zeros((2,))
     
@@ -88,22 +120,39 @@ def simulate_custom_threshold_CDM_trial(threshold_function, drift_vec, ndt, s_v=
     
     return ndt_t+rt, theta
 
+
 @jit(nopython=True)
 def simulate_SDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
     '''
-    input:
-        threshold: a positive floating number
-        drift_vec: drift vector; a three-dimensional array
-        ndt: a positive floating number
-        threshold_dynamic: type of threshold collapse ('fixed', 'linear', 'exponential', or 'hyperbolic')
-        decay: decay rate of the collapsing boundary
-        s_v: standard deviation of drift rate variability
-        s_t: range of non-decision time variability
-        sigma: standard deviation of the diffusion process
-        dt: time step for the simulation
-    returns:
-        rt: response time in seconds
-        theta: a tuple of response angles (theta1, theta2); theta 1 between [0, pi] and theta2 between [-pi, pi]
+    Simulate a single trial of the spherical diffusion model (SDM).
+
+    Parameters
+    ----------
+    threshold : float
+        A positive floating number representing the decision threshold.
+    drift_vec : array_like, shape (3,)
+        A three-dimensional array representing the drift vector.
+    ndt : float
+        A positive floating number representing the non-decision time.
+    threshold_dynamic : {'fixed', 'linear', 'exponential', 'hyperbolic'}, optional
+        Type of threshold collapse. Default is 'fixed'.
+    decay : float, optional
+        Decay rate of the collapsing boundary. Default is 0.
+    s_v : float, optional
+        Standard deviation of drift rate variability. Default is 0.
+    s_t : float, optional
+        Range of non-decision time variability. Default is 0.
+    sigma : float, optional
+        Diffusion coefficient (standard deviation of the diffusion process). Default is 1.
+    dt : float, optional
+        Time step for the simulation. Default is 0.001. 
+
+    Returns
+    -------
+    rt : float
+        Response time in seconds.
+    theta : tuple
+        A tuple of response angles (theta1, theta2); theta[0] between [0, pi] and theta[1] between [-pi, pi]
     '''
     x = np.zeros((3,))
     
@@ -144,18 +193,33 @@ def simulate_SDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', dec
 
 def simulate_custom_threshold_SDM_trial(threshold_function, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001):
     '''
-    input:
-        threshold_function: a function that takes time t and returns the threshold at time t
-        drift_vec: drift vector; a three-dimensional array
-        ndt: a positive floating number
-        s_v: standard deviation of drift rate variability
-        s_t: range of non-decision time variability
-        sigma: standard deviation of the diffusion process
-        dt: time step for the simulation
-    returns:
-        rt: response time in seconds
-        theta: a tuple of response angles (theta1, theta2); theta 1 between [0, pi] and theta2 between [-pi, pi]
+    Simulate a single trial of the spherical diffusion model (SDM) with a user defined threshold function.
+
+    Parameters
+    ----------
+    threshold_function : callable
+        A function that takes time t and returns the threshold at time t.
+    drift_vec : array_like, shape (3,)
+        A three-dimensional array representing the drift vector.
+    ndt : float
+        A positive floating number representing the non-decision time.
+    s_v : float, optional
+        Standard deviation of drift rate variability. Default is 0.
+    s_t : float, optional
+        Range of non-decision time variability. Default is 0.
+    sigma : float, optional
+        Diffusion coefficient (standard deviation of the diffusion process). Default is 1.
+    dt : float, optional
+        Time step for the simulation. Default is 0.001.
+
+    Returns
+    -------
+    rt : float
+        Response time in seconds.
+    theta : tuple
+        A tuple of response angles (theta1, theta2); theta[0] between [0, pi] and theta[1] between [-pi, pi]
     '''
+ 
     x = np.zeros((3,))
     
     rt = 0
@@ -183,19 +247,35 @@ def simulate_custom_threshold_SDM_trial(threshold_function, drift_vec, ndt, s_v=
 @jit(nopython=True)
 def simulate_HSDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
     '''
-    input:
-        threshold: a positive floating number
-        drift_vec: drift vector; a four-dimensional array
-        ndt: a positive floating number
-        threshold_dynamic: type of threshold collapse ('fixed', 'linear', 'exponential', or 'hyperbolic')
-        decay: decay rate of the collapsing boundary
-        s_v: standard deviation of drift rate variability
-        s_t: range of non-decision time variability
-        sigma: standard deviation of the diffusion process
-        dt: time step for the simulation
-    returns:
-        rt: response time in seconds
-        theta: a tuple of response angles (theta1, theta2, theta3); theta1 and theta2 between [0, pi], and theta3 between [-pi, pi]
+    Simulate a single trial of the hyper spherical diffusion model (HSDM).
+
+    Parameters
+    ----------
+    threshold : float
+        A positive floating number representing the decision threshold.
+    drift_vec : array_like, shape (4,)
+        A four-dimensional array representing the drift vector.
+    ndt : float
+        A positive floating number representing the non-decision time.
+    threshold_dynamic : {'fixed', 'linear', 'exponential', 'hyperbolic'}, optional
+        Type of threshold collapse. Default is 'fixed'.
+    decay : float, optional
+        Decay rate of the collapsing boundary. Default is 0.
+    s_v : float, optional
+        Standard deviation of drift rate variability. Default is 0.
+    s_t : float, optional
+        Range of non-decision time variability. Default is 0.
+    sigma : float, optional
+        Diffusion coefficient (standard deviation of the diffusion process). Default is 1.
+    dt : float, optional
+        Time step for the simulation. Default is 0.001. 
+
+    Returns
+    -------
+    rt : float
+        Response time in seconds.
+    theta : tuple
+        A tuple of response angles (theta1, theta2, theta3); theta[0] and theta[1] between [0, pi], and theta[2] between [-pi, pi]
     '''
     x = np.zeros((4,))
     
@@ -236,17 +316,31 @@ def simulate_HSDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', de
 
 def simulate_custom_threshold_HSDM_trial(threshold_function, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001):
     '''
-    input:
-        threshold_function: a function that takes time and returns the threshold at that time
-        drift_vec: drift vector; a four-dimensional array
-        ndt: a positive floating number
-        s_v: standard deviation of drift rate variability
-        s_t: range of non-decision time variability
-        sigma: standard deviation of the diffusion process
-        dt: time step for the simulation
-    returns:
-        rt: response time in seconds
-        theta: a tuple of response angles (theta1, theta2, theta3); theta1 and theta2 between [0, pi], and theta3 between [-pi, pi]
+    Simulate a single trial of the hyper spherical diffusion model (HSDM) with a user defined threshold function.
+
+    Parameters
+    ----------
+    threshold_function : callable
+        A function that takes time and returns the threshold at that time.
+    drift_vec : array_like, shape (4,)
+        A four-dimensional array representing the drift vector.
+    ndt : float
+        A positive floating number representing the non-decision time.
+    s_v : float, optional
+        Standard deviation of drift rate variability. Default is 0.
+    s_t : float, optional
+        Range of non-decision time variability. Default is 0.
+    sigma : float, optional
+        Diffusion coefficient (standard deviation of the diffusion process). Default is 1.
+    dt : float, optional
+        Time step for the simulation. Default is 0.001. 
+
+    Returns
+    -------
+    rt : float
+        Response time in seconds.
+    theta : tuple
+        A tuple of response angles (theta1, theta2, theta3); theta[0] and theta[1] between [0, pi], and theta[2] between [-pi, pi]
     '''
     x = np.zeros((4,))
     
@@ -275,19 +369,35 @@ def simulate_custom_threshold_HSDM_trial(threshold_function, drift_vec, ndt, s_v
 @jit(nopython=True)
 def simulate_PSDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
     '''
-    input:
-        threshold: a positive floating number
-        drift_vec: drift vector; a two-dimensional array
-        ndt: a positive floating number
-        threshold_dynamic: type of threshold collapse ('fixed', 'linear', 'exponential', or 'hyperbolic')
-        decay: decay rate of the collapsing boundary
-        s_v: standard deviation of drift rate variability
-        s_t: range of non-decision time variability
-        sigma: standard deviation of the diffusion process
-        dt: time step for the simulation
-    returns:
-        rt: response time in seconds
-        theta: response angle between [0, pi]
+    Simulate a single trial of the projected spherical diffusion model (PSDM).
+
+    Parameters
+    ----------
+    threshold : float
+        A positive floating number representing the decision threshold.
+    drift_vec : array_like, shape (2,)
+        A two-dimensional array representing the drift vector.
+    ndt : float
+        A positive floating number representing the non-decision time.
+    threshold_dynamic : {'fixed', 'linear', 'exponential', 'hyperbolic'}, optional
+        Type of threshold collapse. Default is 'fixed'.
+    decay : float, optional
+        Decay rate of the collapsing boundary. Default is 0.
+    s_v : float, optional
+        Standard deviation of drift rate variability. Default is 0.
+    s_t : float, optional
+        Range of non-decision time variability. Default is 0.
+    sigma : float, optional
+        Diffusion coefficient (standard deviation of the diffusion process). Default is 1.
+    dt : float, optional
+        Time step for the simulation. Default is 0.001. 
+
+    Returns
+    -------
+    rt : float
+        Response time in seconds.
+    theta : float
+        Response angle between [0, pi]
     '''
     x = np.zeros((3,))
     muz = drift_vec[0]
@@ -336,17 +446,31 @@ def simulate_PSDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', de
 
 def simulate_custom_threshold_PSDM_trial(threshold_function, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001):
     '''
-    input:
-        threshold_function: a function that takes time and returns threshold
-        drift_vec: drift vector; a two-dimensional array
-        ndt: a positive floating number
-        s_v: standard deviation of drift rate variability
-        s_t: range of non-decision time variability
-        sigma: standard deviation of the diffusion process
-        dt: time step for the simulation
-    returns:
-        rt: response time in seconds
-        theta: response angle between [0, pi]
+    Simulate a single trial of the projected spherical diffusion model (PSDM) with a user defined threshold function.
+
+    Parameters
+    ----------
+    threshold_function : callable
+        A function that takes time and returns threshold.
+    drift_vec : array_like, shape (2,)
+        A two-dimensional array representing the drift vector.
+    ndt : float
+        A positive floating number representing the non-decision time.
+    s_v : float, optional
+        Standard deviation of drift rate variability. Default is 0.
+    s_t : float, optional
+        Range of non-decision time variability. Default is 0.
+    sigma : float, optional
+        Diffusion coefficient (standard deviation of the diffusion process). Default is 1.
+    dt : float, optional
+        Time step for the simulation. Default is 0.001. 
+
+    Returns
+    -------
+    rt : float
+        Response time in seconds.
+    theta : float
+        Response angle between [0, pi]
     '''
     x = np.zeros((3,))
     muz = drift_vec[0]
@@ -385,18 +509,35 @@ def simulate_custom_threshold_PSDM_trial(threshold_function, drift_vec, ndt, s_v
 @jit(nopython=True)
 def simulate_PHSDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', decay=0, s_v=0, s_t=0, sigma=1, dt=0.001):
     '''
-    input:
-        threshold: a positive floating number
-        drift_vec: drift vector; a three-dimensional array
-        ndt: a positive floating number
-        decay: decay rate of the collapsing boundary
-        s_v: standard deviation of drift rate variability
-        s_t: range of non-decision time variability
-        sigma: standard deviation of the diffusion process
-        dt: time step for the simulation
-    returns:
-        rt: response time in seconds
-        theta: response angle between [0, pi]
+    Simulate a single trial of the projected hyper spherical diffusion model (PHSDM).
+
+    Parameters
+    ----------
+    threshold : float
+        A positive floating number representing the decision threshold.
+    drift_vec : array_like, shape (3,)
+        A three-dimensional array representing the drift vector.
+    ndt : float
+        A positive floating number representing the non-decision time.
+    threshold_dynamic : {'fixed', 'linear', 'exponential', 'hyperbolic'}, optional
+        Type of threshold collapse. Default is 'fixed'.
+    decay : float, optional
+        Decay rate of the collapsing boundary. Default is 0.
+    s_v : float, optional
+        Standard deviation of drift rate variability. Default is 0.
+    s_t : float, optional
+        Range of non-decision time variability. Default is 0.
+    sigma : float, optional
+        Diffusion coefficient (standard deviation of the diffusion process). Default is 1.
+    dt : float, optional
+        Time step for the simulation. Default is 0.001. 
+
+    Returns
+    -------
+    rt : float
+        Response time in seconds.
+    theta : tuple
+        A tuple of response angles (theta1, theta2); theta[0] and theta[1] between [0, pi]
     '''
 
     x = np.zeros((4,))
@@ -449,6 +590,33 @@ def simulate_PHSDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', d
     
 
 def simulate_custom_threshold_PHSDM_trial(threshold_function, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001):
+    '''
+    Simulate a single trial of the projected hyper spherical diffusion model (PHSDM) with a user defined threshold function.
+
+    Parameters
+    ----------
+    threshold_function : callable
+        A function that takes a time value and returns the threshold at that time.
+    drift_vec : array_like, shape (3,)
+        A three-dimensional array representing the drift vector.
+    ndt : float
+        A positive floating number representing the non-decision time.
+    s_v : float, optional
+        Standard deviation of drift rate variability. Default is 0.
+    s_t : float, optional
+        Range of non-decision time variability. Default is 0.
+    sigma : float, optional
+        Diffusion coefficient (standard deviation of the diffusion process). Default is 1.
+    dt : float, optional
+        Time step for the simulation. Default is 0.001. 
+
+    Returns
+    -------
+    rt : float
+        Response time in seconds.
+    theta : tuple
+        A tuple of response angles (theta1, theta2); theta[0] and theta[1] between [0, pi]
+    '''
     x = np.zeros((4,))
     muw = drift_vec[0]
     muz = drift_vec[1]
