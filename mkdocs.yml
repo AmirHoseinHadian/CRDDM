@@ -25,6 +25,7 @@ theme:
 
 nav:
   - Home: index.md
+  - Usage: usage.md
   - Installation: installation.md
   - Tutorials:
       - Quickstart: tutorials/quickstart.md
@@ -37,6 +38,7 @@ nav:
 
 plugins:
   - search
+  - mermaid2
   - mkdocstrings:
       handlers:
         python:
@@ -49,13 +51,18 @@ plugins:
             docstring_section_style: table
 
 markdown_extensions:
+  - admonition
   - tables
   - admonition
-  - pymdownx.superfences
   - pymdownx.highlight
   - pymdownx.inlinehilite
   - pymdownx.arithmatex:
       generic: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
 
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js
