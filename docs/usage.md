@@ -12,8 +12,6 @@ This guide explains:
 CRDDM implements diffusion models that jointly explain **response time (RT)** and **continuous response location** and assume that response times reflect **evidence accumulation dynamics**.
 Therefore, to use these models appropriately, your dataset must contain:
 
-### Required (trial-level)
-
 - **Response time (RT)** for each decision  
 - **Continuous response value** for each decision (e.g., angle, slider position, 2D coordinate)
 
