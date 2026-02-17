@@ -302,6 +302,37 @@ class ProjectedHyperSphericalDiffusionModel:
             raise ValueError("\'threshold_dynamic\' must be one of \'fixed\', \'linear\', \'exponential\', \'hyperbolic\', or \'custom\'. However, got \'{}\'".format(threshold_dynamic))
 
     def simulate(self, drift_vec, ndt, threshold=1, decay=0, threshold_function=None, s_v=0, s_t=0, sigma=1, dt=0.001, n_sample=1):
+        '''
+        Simulate data from the Projected Hyper-Spherical Diffusion Model
+
+        Parameters
+        ----------
+        drift_vec : array-like, shape (3,)
+            The drift rates in each dimension
+        ndt : float
+            The non-decision time
+        threshold : float
+            The decision threshold (default is 1)
+        decay : float, optional
+            The threshold decay rate (default is 0)
+        threshold_function : callable, if threshold_dynamic is 'custom'
+            A function that takes time t and returns the threshold at time t
+        s_v : float, optional
+            The standard deviation of drift variability (default is 0)
+        s_t : float, optional
+            The standard deviation of non-decision time variability (default is 0)
+        sigma : float, optional
+            The diffusion coefficient (default is 1)
+        dt : float, optional
+            Time step for the simulation (default is 0.001)
+        n_sample : int, optional
+            Number of samples to simulate (default is 1)
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame containing simulated response times and choice angles
+        '''
         RT = np.empty((n_sample,))
         Choice = np.empty((n_sample, 2))
 
@@ -349,6 +380,39 @@ class ProjectedHyperSphericalDiffusionModel:
         return pd.DataFrame(np.c_[RT, Choice], columns=['rt', 'response1', 'response2'])
 
     def joint_lpdf(self, rt, theta, drift_vec, ndt, threshold, decay=0, threshold_function=None, dt_threshold_function=None, s_v=0, s_t=0, sigma=1):
+        '''
+        Compute the joint log-probability density function of response time and choice angles for the Projected Hyper-Spherical Diffusion Model
+
+        Parameters
+        ----------
+        rt : array-like, shape (n_samples,)
+            The response times
+        theta : array-like, shape (n_samples, 2)
+            The choice angles in spherical coordinates (theta1, theta2)
+        drift_vec : array-like, shape (3,) or (n_samples, 3)
+            The drift rates in each dimension
+        ndt : float
+            The non-decision time
+        threshold : float
+            The decision threshold (default is 1)
+        decay : float, optional
+            The threshold decay rate (default is 0)
+        threshold_function : callable, if threshold_dynamic is 'custom'
+            A function that takes time t and returns the threshold at time t
+        dt_threshold_function : callable, if threshold_dynamic is 'custom'
+            A function that takes time t and returns the derivative of the threshold at time t
+        s_v : float, optional
+            The standard deviation of drift variability (default is 0)
+        s_t : float, optional
+            The standard deviation of non-decision time variability (default is 0)
+        sigma : float, optional
+            The diffusion coefficient (default is 1)
+
+        Returns
+        -------
+        log_density : array-like, shape (n_samples,)
+            The joint log-probability density of response time and choice angles
+        '''
         if drift_vec.ndim == 1:
             drift_vec = drift_vec * np.ones((rt.shape[0], 3))
 
