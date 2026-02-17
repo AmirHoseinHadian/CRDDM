@@ -489,7 +489,7 @@ class ProjectedHyperSphericalDiffusionModel:
                             term2 = iv(0, threshold * norm_mu[i] * np.sin(theta1_mu[i]) * np.sin(theta[i, 0]) * np.sin(theta2_mu[i]) * np.sin(theta[i, 1])/sigma**2)
                             term3 = -0.5 * norm_mu[i]**2 * (tt[i] - eps)
                             integrand = np.exp(term3) * np.interp(tt[i]-eps, T, fpt_z)/s_t
-                            density = 2*np.pi * term1 * term2 * np.trapz(integrand, eps)
+                            density = 2*np.pi * term1 * term2 * trapz_1d(integrand, eps)
                         elif self.threshold_dynamic == 'linear':
                             x0 = np.cos(theta1_mu[i]) * np.cos(theta[i, 0])
                             x1 = np.sin(theta1_mu[i]) * np.sin(theta[i, 0]) * np.cos(theta2_mu[i]) * np.cos(theta[i, 1])
@@ -497,7 +497,7 @@ class ProjectedHyperSphericalDiffusionModel:
                             term2 = iv(0, (threshold - decay * (tt[i] - eps)) * norm_mu[i] * np.sin(theta1_mu[i]) * np.sin(theta[i, 0]) * np.sin(theta2_mu[i]) * np.sin(theta[i, 1])/sigma**2)
                             term3 = -0.5 * norm_mu[i]**2 * (tt[i] - eps)
                             integrand = term1 * term2 * np.exp(term3) * np.interp(tt[i]-eps, T, fpt_z)/s_t
-                            density = 2*np.pi * np.trapz(integrand, eps)
+                            density = 2*np.pi * trapz_1d(integrand, eps)
                         elif self.threshold_dynamic == 'exponential':
                             x0 = np.cos(theta1_mu[i]) * np.cos(theta[i, 0])
                             x1 = np.sin(theta1_mu[i]) * np.sin(theta[i, 0]) * np.cos(theta2_mu[i]) * np.cos(theta[i, 1])
@@ -505,7 +505,7 @@ class ProjectedHyperSphericalDiffusionModel:
                             term2 = iv(0, threshold*np.exp(-decay * (tt[i] - eps)) * norm_mu[i] * np.sin(theta1_mu[i]) * np.sin(theta[i, 0]) * np.sin(theta2_mu[i]) * np.sin(theta[i, 1])/sigma**2)
                             term3 = -0.5 * norm_mu[i]**2 * (tt[i] - eps)
                             integrand = term1 * term2 * np.exp(term3) * np.interp(tt[i]-eps, T, fpt_z)/s_t
-                            density = 2*np.pi * np.trapz(integrand, eps)
+                            density = 2*np.pi * trapz_1d(integrand, eps)
                         elif self.threshold_dynamic == 'hyperbolic':
                             x0 = np.cos(theta1_mu[i]) * np.cos(theta[i, 0])
                             x1 = np.sin(theta1_mu[i]) * np.sin(theta[i, 0]) * np.cos(theta2_mu[i]) * np.cos(theta[i, 1])
@@ -513,7 +513,7 @@ class ProjectedHyperSphericalDiffusionModel:
                             term2 = iv(0, threshold/(1  + decay * (tt[i] - eps)) * norm_mu[i] * np.sin(theta1_mu[i]) * np.sin(theta[i, 0]) * np.sin(theta2_mu[i]) * np.sin(theta[i, 1])/sigma**2)
                             term3 = -0.5 * norm_mu[i]**2 * (tt[i] - eps)
                             integrand = term1 * term2 * np.exp(term3) * np.interp(tt[i]-eps, T, fpt_z)/s_t
-                            density = 2*np.pi * np.trapz(integrand, eps)
+                            density = 2*np.pi * trapz_1d(integrand, eps)
                         elif self.threshold_dynamic == 'custom':
                             x0 = np.cos(theta1_mu[i]) * np.cos(theta[i, 0])
                             x1 = np.sin(theta1_mu[i]) * np.sin(theta[i, 0]) * np.cos(theta2_mu[i]) * np.cos(theta[i, 1])
@@ -521,7 +521,7 @@ class ProjectedHyperSphericalDiffusionModel:
                             term2 = iv(0, threshold_function(tt[i] - eps) * norm_mu[i] * np.sin(theta1_mu[i]) * np.sin(theta[i, 0]) * np.sin(theta2_mu[i]) * np.sin(theta[i, 1])/sigma**2)
                             term3 = -0.5 * norm_mu[i]**2 * (tt[i] - eps)
                             integrand = term1 * term2 * np.exp(term3) * np.interp(tt[i]-eps, T, fpt_z)/s_t
-                            density = 2*np.pi * np.trapz(integrand, eps)
+                            density = 2*np.pi * trapz_1d(integrand, eps)
                         if density > 0.1**14:
                             log_density[i] = np.log(density)
         else:
