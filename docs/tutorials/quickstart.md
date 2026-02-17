@@ -73,6 +73,7 @@ sim_data.head()
 
 
 The simulated dataset contains:
+
 - `rt`: response times
 - `response`: continuous angular responses on the circle in radian
 
