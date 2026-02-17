@@ -449,4 +449,39 @@ def simulate_PHSDM_trial(threshold, drift_vec, ndt, threshold_dynamic='fixed', d
     
 
 def simulate_custom_threshold_PHSDM_trial(threshold_function, drift_vec, ndt, s_v=0, s_t=0, sigma=1, dt=0.001):
-    pass # To be implemented later
+    x = np.zeros((4,))
+    muw = drift_vec[0]
+    muz = drift_vec[1]
+    eta = drift_vec[2]
+    
+    norm_mu = np.sqrt(eta**2 + muz**2 + muw**2)
+    theta1_mu = np.arctan2(eta, muw)
+    theta2_mu = np.arctan2(eta, muz)
+    
+    rt = 0
+    rphi = np.pi/4 # it is not important (just a dummpy value)
+    mux = norm_mu * np.sin(theta1_mu) * np.sin(theta2_mu) * np.cos(rphi)
+    muy = norm_mu * np.sin(theta1_mu) * np.sin(theta2_mu) * np.sin(rphi)
+
+    mu = np.array([mux, muy, muz, muw])
+
+    if s_v>0:
+        mu_t = mu + s_v*np.random.randn(4)
+    else:
+        mu_t = mu
+
+    if s_t>0:
+        ndt_t = ndt + s_t*np.random.rand()
+    else:
+        ndt_t = ndt
+
+
+    while np.sqrt(x[0]**2 + x[1]**2 + x[2]**2 + x[3]**2) < threshold_function(rt):
+        x += mu_t*dt + sigma*np.sqrt(dt)*np.random.randn(4)
+        rt += dt
+    
+    
+    theta1 = np.arctan2(np.sqrt(x[0]**2 + x[1]**2), x[3])
+    theta2 = np.arctan2(np.sqrt(x[0]**2 + x[1]**2), x[2])   
+    
+    return ndt_t+rt, (theta1, theta2)
