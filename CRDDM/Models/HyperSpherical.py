@@ -528,7 +528,17 @@ class ProjectedHyperSphericalDiffusionModel:
             # With drift variability
             if s_t == 0:
                 # No non-decision time variability
-                pass
+                s_v2 = s_v**2
+                c1 = a * np.sin(theta[:, 0]) * np.sin(theta[:, 1]) * s_v2
+                c2 = 2*s_v2 * (s_v2 * tt + 1)
+                term1 = 2*np.pi * iv(0, 2*c1 * drift_vec[:, 2]/c2)
+                term2 = 1/(s_v2 * tt + 1)**2
+                p1 = (c1**2 + drift_vec[:, 2]**2)/c2
+                p2 = (a * np.cos(theta[:, 0]) * s_v2 + drift_vec[:, 0])**2 / c2
+                p3 = (a * np.sin(theta[:, 0]) * np.cos(theta[:, 1]) * s_v2 + drift_vec[:, 1])**2 / c2
+                p4 = (norm_mu**2)/(2*s_v2)
+
+                log_density = np.log(term1) + np.log(term2) + (p1 + p2 + p3 - p4) + np.log(fpt_z)
             else:
                 # With non-decision time variability
                 pass
