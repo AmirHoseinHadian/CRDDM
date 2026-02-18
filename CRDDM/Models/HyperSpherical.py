@@ -540,9 +540,45 @@ class ProjectedHyperSphericalDiffusionModel:
 
                 log_density = np.log(term1) + np.log(term2) + (p1 + p2 + p3 - p4) + np.log(fpt_z)
             else:
-                # With non-decision time variability
-                pass
+                log_density = np.log(0.1**14) * np.ones(rt.shape[0])
+                eps = np.linspace(0, s_t, max(2, int(s_t//0.02)))
+                s_v2 = s_v**2
 
+                for i in range(rt.shape[0]):
+                    if tt[i] - s_t > 0:
+                        c2 = 2*s_v2 * (s_v2 * (tt[i] - eps) + 1)
+                        if self.threshold_dynamic == 'fixed':
+                            c1 = threshold * np.sin(theta[i, 0]) * np.sin(theta[i, 1]) * s_v2
+                            p2 = (threshold * np.cos(theta[i, 0]) * s_v2 + drift_vec[i, 0])**2 / c2
+                            p3 = (threshold * np.sin(theta[i, 0]) * np.cos(theta[i, 1]) * s_v2 + drift_vec[i, 1])**2 / c2
+                        elif self.threshold_dynamic == 'linear':
+                            c1 = (threshold - decay*(tt[i]-eps)) * np.sin(theta[i, 0]) * np.sin(theta[i, 1]) * s_v2
+                            p2 = ((threshold - decay*(tt[i]-eps)) * np.cos(theta[i, 0]) * s_v2 + drift_vec[i, 0])**2 / c2
+                            p3 = ((threshold - decay*(tt[i]-eps)) * np.sin(theta[i, 0]) * np.cos(theta[i, 1]) * s_v2 + drift_vec[i, 1])**2 / c2
+                        elif self.threshold_dynamic == 'exponential':
+                            c1 = (threshold * np.exp(-decay*(tt[i]-eps))) * np.sin(theta[i, 0]) * np.sin(theta[i, 1]) * s_v2
+                            p2 = ((threshold * np.exp(-decay*(tt[i]-eps))) * np.cos(theta[i, 0]) * s_v2 + drift_vec[i, 0])**2 / c2
+                            p3 = ((threshold * np.exp(-decay*(tt[i]-eps))) * np.sin(theta[i, 0]) * np.cos(theta[i, 1]) * s_v2 + drift_vec[i, 1])**2 / c2
+                        elif self.threshold_dynamic == 'hyperbolic':
+                            c1 = (threshold / (1 + decay*(tt[i]-eps))) * np.sin(theta[i, 0]) * np.sin(theta[i, 1]) * s_v2
+                            p2 = ((threshold / (1 + decay*(tt[i]-eps))) * np.cos(theta[i, 0]) * s_v2 + drift_vec[i, 0])**2 / c2
+                            p3 = ((threshold / (1 + decay*(tt[i]-eps))) * np.sin(theta[i, 0]) * np.cos(theta[i, 1]) * s_v2 + drift_vec[i, 1])**2 / c2
+                        elif self.threshold_dynamic == 'custom':
+                            c1 = threshold_function(tt[i]-eps) * np.sin(theta[i, 0]) * np.sin(theta[i, 1]) * s_v2
+                            p2 = (threshold_function(tt[i]-eps) * np.cos(theta[i, 0]) * s_v2 + drift_vec[i, 0])**2 / c2
+                            p3 = (threshold_function(tt[i]-eps) * np.sin(theta[i, 0]) * np.cos(theta[i, 1]) * s_v2 + drift_vec[i, 1])**2 / c2
+
+                        term1 = 2*np.pi * iv(0, 2*c1 * drift_vec[:, 2]/c2)
+                        term2 = 1/(s_v2 * (tt[i] - eps) + 1)**2
+                        p4 = (norm_mu**2)/(2*s_v2)
+                        term3 = np.exp(p1 + p2 + p3 - p4)
+                        integrand = term1 * term2 * term3 * np.interp(tt[i]-eps, T, fpt_z)/s_t
+
+                        density = trapz_1d(integrand, eps)
+
+                        if density > 0.1**14:
+                                log_density[i] = np.log(density)
+        
         log_density[rt - ndt <= 0] = np.log(0.1**14)
         log_density = np.maximum(log_density, np.log(0.1**14))
             
