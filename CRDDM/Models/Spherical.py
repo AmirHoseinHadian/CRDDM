@@ -523,9 +523,11 @@ class ProjectedSphericalDiffusionModel:
                 p1 = (c1**2 + drift_vec[:, 1]**2)/c2
                 p2 = (a * np.cos(theta) * s_v2 + drift_vec[:, 0])**2 / c2
                 p3 = (norm_mu**2)/(2*s_v2)
-                term3 = np.exp(p1 + p2 - p3)
+                # term3 = np.exp(p1 + p2 - p3)
+                # log_density = np.log(term1) + np.log(term2) + np.log(term3) + np.log(fpt_z)
 
-                log_density = np.log(term1) + np.log(term2) + np.log(term3) + np.log(fpt_z)
+                term3 = p1 + p2 - p3
+                log_density = np.log(term1) + np.log(term2) + term3 + np.log(fpt_z)
             else:
                 log_density = np.log(0.1**14) * np.ones(rt.shape[0])
                 eps = np.linspace(0, s_t, max(2, int(s_t//0.02)))
