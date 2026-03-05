@@ -27,9 +27,9 @@ CRDDM is designed for researchers in **cognitive science**, **mathematical psych
 
 CRDDM supports a wide range of continuous-response scales commonly used in experimental research, including:
 
-- Bounded one-dimensional scales (e.g., arcs or sliders),
-- Circular scales (e.g., color wheels),
-- Two-dimensional scales (e.g., 2D planes).
+- Circular scales (e.g., panels a, b, and c),
+- Bounded one-dimensional scales (e.g., panels d and e),
+- Two-dimensional scales (e.g., panel f).
 
 Examples of continuous-response decision tasks are illustrated below:
 
@@ -52,10 +52,10 @@ This flexibility allows researchers to model urgency signals and dynamic decisio
 
 CRDDM includes four classes of multi-dimensional diffusion models, tailored to different response geometries:
 
-- **Circular Diffusion Models** for experiments with circular response scales,
-- **(Hyper-)Spherical Diffusion Models** for experiments with circular response scales,
-- **Projected Spherical Diffusion Models** for experiments with one-dimensional bounded scales,
-- **Projected Hyper-spherical Diffusion Models** for experiments with two-dimensional bounded scales.
+- **Circular Diffusion Models** for experiments with circular response scales (e.g., panels a, b, and c in figure above),
+- **(Hyper-)Spherical Diffusion Models** for experiments with circular response scales (e.g., panels a, b, and c in figure above),
+- **Projected Spherical Diffusion Models** for experiments with one-dimensional bounded scales (e.g., panels d and e in figure above),
+- **Projected Hyper-spherical Diffusion Models** for experiments with two-dimensional bounded scales (e.g., panel f in figure above).
 
 ![Diffusion models of continuous response tasks.](imgs/Diffusion_models.png "Diffusion models of continuous response tasks.")
 
