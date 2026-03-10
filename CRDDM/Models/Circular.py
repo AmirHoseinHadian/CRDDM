@@ -161,13 +161,13 @@ class CircularDiffusionModel:
                 s = tt/threshold**2
                 w = np.minimum(np.maximum((s - s0) / (s1 - s0), 0), 1)
                 fpt_lt = cdm_long_t_fpt_z(tt, threshold, sigma=sigma)
-                fpt_st = 1/threshold**2 * cdm_short_t_fpt_z(tt/threshold**2, 0.1**8/threshold**2)   
+                fpt_st = sigma**2/threshold**2 * cdm_short_t_fpt_z(sigma**2 * tt/threshold**2, sigma**2 * 0.1**8/threshold**2)   
             else:
                 T = np.arange(0, tt.max()+0.05, 0.05)
                 s = T/threshold**2
                 w = np.minimum(np.maximum((s - s0) / (s1 - s0), 0), 1)
                 fpt_lt = cdm_long_t_fpt_z(T, threshold, sigma=sigma)
-                fpt_st = 1/threshold**2 * cdm_short_t_fpt_z(T/threshold**2, 0.1**8/threshold**2)   
+                fpt_st = sigma**2/threshold**2 * cdm_short_t_fpt_z(sigma**2 * T/threshold**2, sigma**2 * 0.1**8/threshold**2)   
             fpt_z =  (1 - w) * fpt_st + w * fpt_lt
         elif self.threshold_dynamic == 'linear':
             a = threshold - decay*tt
@@ -200,7 +200,7 @@ class CircularDiffusionModel:
             if s_t == 0:
                 # No non-decision time variability
                 term1 = a * (mu_dot_x0 + mu_dot_x1) / sigma**2
-                term2 = 0.5 * (drift_vec[:, 0]**2 + drift_vec[:, 1]**2) * tt
+                term2 = 0.5 * (drift_vec[:, 0]**2 + drift_vec[:, 1]**2) * tt / sigma**2
                 log_density = term1 - term2 + np.log(fpt_z) - np.log(2*np.pi)
             else:
                 # With non-decision time variability
@@ -211,19 +211,19 @@ class CircularDiffusionModel:
                 for i in range(rt.shape[0]):
                     if tt[i] - s_t > 0:
                         if self.threshold_dynamic == 'fixed':
-                            integrand = np.exp(- 0.5 * norm2_drift[i] * (tt[i] - eps)) * np.interp(tt[i]-eps, T, fpt_z)/s_t
+                            integrand = np.exp(- 0.5 * norm2_drift[i] * (tt[i] - eps)/sigma**2) * np.interp(tt[i]-eps, T, fpt_z)/s_t
                             density = 0.5/np.pi * np.exp(threshold * mu_dot_x[i]) * trapz_1d(integrand, eps)
                         elif self.threshold_dynamic == 'linear':
-                            integrand = np.exp((threshold - decay * (tt[i] - eps)) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)) * np.interp(tt[i]-eps, T, fpt_z)/s_t
+                            integrand = np.exp((threshold - decay * (tt[i] - eps)) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)/sigma**2) * np.interp(tt[i]-eps, T, fpt_z)/s_t
                             density = 0.5/np.pi * trapz_1d(integrand, eps)
                         elif self.threshold_dynamic == 'exponential':
-                            integrand = np.exp(threshold*np.exp(-decay * (tt[i] - eps)) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)) * np.interp(tt[i]-eps, T, fpt_z)/s_t
+                            integrand = np.exp(threshold*np.exp(-decay * (tt[i] - eps)) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)/sigma**2) * np.interp(tt[i]-eps, T, fpt_z)/s_t
                             density = 0.5/np.pi * trapz_1d(integrand, eps)
                         elif self.threshold_dynamic == 'hyperbolic':
-                            integrand = np.exp(threshold/(1  + decay * (tt[i] - eps)) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)) * np.interp(tt[i]-eps, T, fpt_z)/s_t
+                            integrand = np.exp(threshold/(1  + decay * (tt[i] - eps)) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)/sigma**2) * np.interp(tt[i]-eps, T, fpt_z)/s_t
                             density = 0.5/np.pi * trapz_1d(integrand, eps)
                         elif self.threshold_dynamic == 'custom':
-                            integrand = np.exp(threshold_function(tt[i] - eps) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)) * np.interp(tt[i]-eps, T, fpt_z)/s_t
+                            integrand = np.exp(threshold_function(tt[i] - eps) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)/sigma**2) * np.interp(tt[i]-eps, T, fpt_z)/s_t
                             density = 0.5/np.pi * trapz_1d(integrand, eps)
                         
                         if density > 0.1**14:
@@ -236,9 +236,9 @@ class CircularDiffusionModel:
                 s_v2 = s_v**2
                 x0 =  a * np.cos(theta)
                 x1 =  a * np.sin(theta)
-                fixed = 1/(np.sqrt(s_v2 * tt + 1))
-                exponent0 = -0.5*drift_vec[:, 0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[:, 0])**2 / (s_v2 * (s_v2 * tt + 1))
-                exponent1 = -0.5*drift_vec[:, 1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[:, 1])**2 / (s_v2 * (s_v2 * tt + 1))
+                fixed = 1/(np.sqrt(s_v2/sigma**2 * tt + 1))
+                exponent0 = -0.5*drift_vec[:, 0]**2/s_v2 + 0.5*(x0 * s_v2/sigma**2 + drift_vec[:, 0])**2 / (s_v2 * (s_v2/sigma**2 * tt + 1))
+                exponent1 = -0.5*drift_vec[:, 1]**2/s_v2 + 0.5*(x1 * s_v2/sigma**2 + drift_vec[:, 1])**2 / (s_v2 * (s_v2/sigma**2 * tt + 1))
 
                 log_density = 2*np.log(fixed) + exponent0 + exponent1 + np.log(fpt_z) - np.log(2*np.pi)
             else:
@@ -263,9 +263,9 @@ class CircularDiffusionModel:
                         elif self.threshold_dynamic == 'custom':
                             x0 =  threshold_function(tt[i]-eps) * np.cos(theta[i])
                             x1 =  threshold_function(tt[i]-eps) * np.sin(theta[i])
-                        fixed = 1/(np.sqrt(s_v2 * (tt[i]-eps) + 1))
-                        exponent0 = -0.5*drift_vec[i, 0]**2/s_v2 + 0.5*(x0 * s_v2 + drift_vec[i, 0])**2 / (s_v2 * (s_v2 * (tt[i]-eps) + 1))
-                        exponent1 = -0.5*drift_vec[i, 1]**2/s_v2 + 0.5*(x1 * s_v2 + drift_vec[i, 1])**2 / (s_v2 * (s_v2 * (tt[i]-eps) + 1))
+                        fixed = 1/(np.sqrt(s_v2/sigma**2 * (tt[i]-eps) + 1))
+                        exponent0 = -0.5*drift_vec[i, 0]**2/s_v2 + 0.5*(x0 * s_v2/sigma**2 + drift_vec[i, 0])**2 / (s_v2 * (s_v2/sigma**2 * (tt[i]-eps) + 1))
+                        exponent1 = -0.5*drift_vec[i, 1]**2/s_v2 + 0.5*(x1 * s_v2/sigma**2 + drift_vec[i, 1])**2 / (s_v2 * (s_v2/sigma**2 * (tt[i]-eps) + 1))
 
                         integrand = fixed**2 * np.exp(exponent0 + exponent1) * np.interp(tt[i]-eps, T, fpt_z)/s_t
                         density = 1/(2*np.pi) * trapz_1d(integrand, eps)
