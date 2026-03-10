@@ -133,6 +133,8 @@ class SphericalDiffusionModel:
             The standard deviation of non-decision time variability (default is 0)
         sigma : float, optional
             The diffusion coefficient (default is 1)
+        dt : float, optional
+            The time step for numerical estimation of first-passage time densities (default is 0.01)
 
         Returns
         -------
@@ -407,6 +409,8 @@ class ProjectedSphericalDiffusionModel:
             The standard deviation of non-decision time variability (default is 0)
         sigma : float, optional
             The diffusion coefficient (default is 1)
+        dt : float, optional
+            The time step for numerical estimation of first-passage time densities (default is 0.01)
 
         Returns
         -------
