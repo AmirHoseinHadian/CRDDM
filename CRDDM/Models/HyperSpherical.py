@@ -167,21 +167,21 @@ class HyperSphericalDiffusionModel:
         elif self.threshold_dynamic == 'linear':
             a = threshold - decay*tt
             T_max = min(rt.max(), threshold/decay)
-            g_z, T = ie_fpt_linear(threshold, decay, 4, 0.000001, dt=0.02, T_max=T_max)
+            g_z, T = ie_fpt_linear(threshold, decay, 4*sigma**2, 0.000001, sigma=2*sigma**2, dt=0.02, T_max=T_max)
             fpt_z = np.interp(tt, T, g_z)
         elif self.threshold_dynamic == 'exponential':
             a = threshold * np.exp(-decay*tt)
-            g_z, T = ie_fpt_exponential(threshold, decay, 4, 0.000001, dt=0.02, T_max=rt.max())
+            g_z, T = ie_fpt_exponential(threshold, decay, 4*sigma**2, 0.000001, sigma=2*sigma**2, dt=0.02, T_max=rt.max())
             fpt_z = np.interp(tt, T, g_z)
         elif self.threshold_dynamic == 'hyperbolic':
             a = threshold / (1 + decay*tt)
-            g_z, T = ie_fpt_hyperbolic(threshold, decay, 4, 0.000001, dt=0.02, T_max=rt.max())
+            g_z, T = ie_fpt_hyperbolic(threshold, decay, 4*sigma**2, 0.000001, sigma=2*sigma**2, dt=0.02, T_max=rt.max())
             fpt_z = np.interp(tt, T, g_z)
         elif self.threshold_dynamic == 'custom':
             threshold_function2 = lambda t: threshold_function(t)**2
             dt_threshold_function2 = lambda t: 2 * dt_threshold_function(t) * threshold_function(t)
             a = threshold_function(tt)
-            g_z, T = ie_fpt_custom(threshold_function2, dt_threshold_function2, 4, 0.000001, dt=0.02, T_max=rt.max())
+            g_z, T = ie_fpt_custom(threshold_function2, dt_threshold_function2, 4*sigma**2, 0.000001, sigma=2*sigma**2, dt=0.02, T_max=rt.max())
             fpt_z = np.interp(tt, T, g_z)
 
         fpt_z = np.maximum(fpt_z, 0.1**14)
@@ -441,21 +441,21 @@ class ProjectedHyperSphericalDiffusionModel:
         elif self.threshold_dynamic == 'linear':
             a = threshold - decay*tt
             T_max = min(rt.max(), threshold/decay)
-            g_z, T = ie_fpt_linear(threshold, decay, 4, 0.000001, dt=0.02, T_max=T_max)
+            g_z, T = ie_fpt_linear(threshold, decay, 4*sigma**2, 0.000001, sigma=2*sigma**2, dt=0.02, T_max=T_max)
             fpt_z = np.interp(tt, T, g_z)
         elif self.threshold_dynamic == 'exponential':
             a = threshold * np.exp(-decay*tt)
-            g_z, T = ie_fpt_exponential(threshold, decay, 4, 0.000001, dt=0.02, T_max=rt.max())
+            g_z, T = ie_fpt_exponential(threshold, decay, 4*sigma**2, 0.000001, sigma=2*sigma**2, dt=0.02, T_max=rt.max())
             fpt_z = np.interp(tt, T, g_z)
         elif self.threshold_dynamic == 'hyperbolic':
             a = threshold / (1 + decay*tt)
-            g_z, T = ie_fpt_hyperbolic(threshold, decay, 4, 0.000001, dt=0.02, T_max=rt.max())
+            g_z, T = ie_fpt_hyperbolic(threshold, decay, 4*sigma**2, 0.000001, sigma=2*sigma**2, dt=0.02, T_max=rt.max())
             fpt_z = np.interp(tt, T, g_z)
         elif self.threshold_dynamic == 'custom':
             threshold_function2 = lambda t: threshold_function(t)**2
             dt_threshold_function2 = lambda t: 2 * dt_threshold_function(t) * threshold_function(t)
             a = threshold_function(tt)
-            g_z, T = ie_fpt_custom(threshold_function2, dt_threshold_function2, 4, 0.000001, dt=0.02, T_max=rt.max())
+            g_z, T = ie_fpt_custom(threshold_function2, dt_threshold_function2, 4*sigma**2, 0.000001, sigma=2*sigma**2, dt=0.02, T_max=rt.max())
             fpt_z = np.interp(tt, T, g_z)
 
         fpt_z = np.maximum(fpt_z, 0.1**14)
