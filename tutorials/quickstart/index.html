@@ -208,6 +208,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../../usage/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Usage
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../../installation/" class="md-tabs__link">
         
   
@@ -347,6 +366,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../installation/" class="md-nav__link">
         
   
@@ -392,10 +438,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
@@ -413,8 +459,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -524,10 +570,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-define-the-likelihood-function" class="md-nav__link">
+  <a href="#4-visualizing-simulated-data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Define the likelihood function
+        4. Visualizing simulated data
       
     </span>
   </a>
@@ -535,10 +581,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-estimate-parameters-using-differential-evolution" class="md-nav__link">
+  <a href="#5-define-the-likelihood-function" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Estimate parameters using differential evolution
+        5. Define the likelihood function
       
     </span>
   </a>
@@ -546,10 +592,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-inspect-recovered-parameters" class="md-nav__link">
+  <a href="#6-estimate-parameters-using-differential-evolution" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6. Inspect recovered parameters
+        6. Estimate parameters using differential evolution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-inspect-recovered-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Inspect recovered parameters
       
     </span>
   </a>
@@ -782,10 +839,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-define-the-likelihood-function" class="md-nav__link">
+  <a href="#4-visualizing-simulated-data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Define the likelihood function
+        4. Visualizing simulated data
       
     </span>
   </a>
@@ -793,10 +850,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-estimate-parameters-using-differential-evolution" class="md-nav__link">
+  <a href="#5-define-the-likelihood-function" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Estimate parameters using differential evolution
+        5. Define the likelihood function
       
     </span>
   </a>
@@ -804,10 +861,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-inspect-recovered-parameters" class="md-nav__link">
+  <a href="#6-estimate-parameters-using-differential-evolution" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6. Inspect recovered parameters
+        6. Estimate parameters using differential evolution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-inspect-recovered-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Inspect recovered parameters
       
     </span>
   </a>
@@ -895,50 +963,124 @@
 
 <h1 id="quick-start-circular-diffusion-model">Quick Start: Circular Diffusion Model</h1>
 <p>This tutorial demonstrates how to simulate data from a <strong>Circular Diffusion Model (CDM)</strong> and recover model parameters using likelihood-based estimation with CRDDM.</p>
-<hr />
 <h2 id="1-import-required-packages">1. Import required packages</h2>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>              <span class="c1"># Numerical computations</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>             <span class="c1"># Data handling</span>
 
+<span class="c1"># Visualization</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="c1"># Optimization</span>
 <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">differential_evolution</span>
-<span class="kn">from</span> <span class="nn">CRDDM.Models.Circular</span> <span class="kn">import</span> <span class="n">CircularDiffusionModel</span>
+
+<span class="c1"># CRDDM model</span>
+<span class="kn">from</span> <span class="nn">CRDDM.Models.Circular</span> <span class="kn">import</span> <span class="n">CircularDiffusionModel</span> <span class="k">as</span> <span class="n">CDM</span>
 </code></pre></div>
-<hr />
 <h2 id="2-create-a-circular-diffusion-model">2. Create a circular diffusion model</h2>
-<div class="highlight"><pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">CircularDiffusionModel</span><span class="p">(</span><span class="n">threshold_dynamic</span><span class="o">=</span><span class="s2">&quot;fixed&quot;</span><span class="p">)</span>
+<p>To instantiate a model, create an object of the <code>CircularDiffusionModel</code> class and specify the threshold dynamics.</p>
+<p>The <code>threshold_dynamic</code> argument determines whether the decision boundary radius changes over time.</p>
+<p>Available options:</p>
+<ul>
+<li><code>'fixed'</code> (default)</li>
+<li><code>'linear'</code></li>
+<li><code>'exponential'</code></li>
+<li><code>'hyperbolic'</code></li>
+<li><code>'custom'</code></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">CDM</span><span class="p">(</span><span class="n">threshold_dynamic</span><span class="o">=</span><span class="s1">&#39;fixed&#39;</span><span class="p">)</span>
 </code></pre></div>
-<hr />
+<p>The model instance provides two key methods:</p>
+<ul>
+<li><code>simulate(...)</code>, which simulates data (response times and response angles) from the model for a given parameters.</li>
+<li><code>joint_lpdf(...)</code>, which calculates the joint log-likelihood of the model for the given data and set of parameters.</li>
+</ul>
 <h2 id="3-simulate-continuous-response-decision-data">3. Simulate continuous-response decision data</h2>
 <div class="highlight"><pre><span></span><code><span class="c1"># Ground-truth parameters</span>
-<span class="n">threshold</span> <span class="o">=</span> <span class="mf">1.0</span>
-<span class="n">drift_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>  <span class="c1"># drift in x and y directions</span>
-<span class="n">ndt</span> <span class="o">=</span> <span class="mf">0.25</span>                           <span class="c1"># non-decision time</span>
+<span class="n">threshold</span> <span class="o">=</span> <span class="mf">2.0</span>                    <span class="c1"># Decision threshold</span>
+<span class="n">drift_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span> <span class="c1"># Drift in x and y directions</span>
+<span class="n">ndt</span> <span class="o">=</span> <span class="mf">0.25</span>                         <span class="c1"># Non-decision time</span>
 
 <span class="c1"># Simulate data</span>
 <span class="n">sim_data</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span>
-    <span class="n">drift_vector</span><span class="o">=</span><span class="n">drift_vector</span><span class="p">,</span>
-    <span class="n">ndt</span><span class="o">=</span><span class="n">ndt</span><span class="p">,</span>
-    <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+    <span class="n">drift_vector</span><span class="p">,</span>
+    <span class="n">ndt</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="p">,</span>
     <span class="n">n_sample</span><span class="o">=</span><span class="mi">1000</span>
 <span class="p">)</span>
 
 <span class="n">sim_data</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </code></pre></div>
-<p>The simulated dataset contains:
-- <code>rt</code>: response times
-- <code>response</code>: continuous angular responses on the circle in radian</p>
-<hr />
-<h2 id="4-define-the-likelihood-function">4. Define the likelihood function</h2>
-<p>We estimate parameters by <strong>maximizing the joint likelihood</strong> of response times and continuous responses.</p>
-<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">negative_log_likelihood</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">rt</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
-    <span class="n">threshold</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">ndt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">drift_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">params</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="mi">3</span><span class="p">]])</span>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;"></th>
+<th style="text-align: right;">rt</th>
+<th style="text-align: right;">response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.623</td>
+<td style="text-align: right;">-0.288496</td>
+</tr>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.178</td>
+<td style="text-align: right;">-0.213882</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2.552</td>
+<td style="text-align: right;">0.710925</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0.894</td>
+<td style="text-align: right;">-0.255075</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1.242</td>
+<td style="text-align: right;">-0.152316</td>
+</tr>
+</tbody>
+</table>
+<p>The simulated dataset contains:</p>
+<ul>
+<li><code>rt</code>: response times</li>
+<li><code>response</code>: continuous angular responses on the circle in radian</li>
+</ul>
+<h2 id="4-visualizing-simulated-data">4. Visualizing simulated data</h2>
+<div class="highlight"><pre><span></span><code><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">layout</span><span class="o">=</span><span class="s1">&#39;constrained&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">histplot</span><span class="p">(</span><span class="n">sim_data</span><span class="p">[</span><span class="s1">&#39;rt&#39;</span><span class="p">],</span> <span class="n">stat</span><span class="o">=</span><span class="s1">&#39;density&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Response time&quot;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">histplot</span><span class="p">(</span><span class="n">sim_data</span><span class="p">[</span><span class="s1">&#39;response&#39;</span><span class="p">],</span> <span class="n">stat</span><span class="o">=</span><span class="s1">&#39;density&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Response angle (radians)&quot;</span><span class="p">);</span>
+</code></pre></div>
+<p><img alt="png" src="../../imgs/_outputs/output_10_1_quick_start.png" /></p>
+<h2 id="5-define-the-likelihood-function">5. Define the likelihood function</h2>
+<p>We estimate parameters by <strong>maximizing the joint likelihood</strong> of response times and continuous response angles.</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">negative_log_likelihood</span><span class="p">(</span><span class="n">prms</span><span class="p">,</span> <span class="n">rt</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+    <span class="n">threshold</span> <span class="o">=</span>  <span class="n">prms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> 
+    <span class="n">ndt</span> <span class="o">=</span> <span class="n">prms</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> 
+    <span class="n">drift_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">prms</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">prms</span><span class="p">[</span><span class="mi">3</span><span class="p">]])</span>
 
     <span class="n">logpdf</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">joint_lpdf</span><span class="p">(</span><span class="n">rt</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">drift_vec</span><span class="p">,</span> <span class="n">ndt</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">logpdf</span><span class="p">)</span>
 </code></pre></div>
-<hr />
-<h2 id="5-estimate-parameters-using-differential-evolution">5. Estimate parameters using differential evolution</h2>
+<h2 id="6-estimate-parameters-using-differential-evolution">6. Estimate parameters using differential evolution</h2>
+<p>After defining the <code>negative_log_likelihood</code> function, users can pass this function to any optimization routine. For instance, users can use <code>scipy.optimize.differential_evolution</code>. This optimizer requires the parameters' range. In other words, <code>differential_evolution</code> searches for the global minimum of the function within a <strong>bounded space</strong> defined by the user. Therefore, if users wish to employ <code>differential_evolution</code> as the optimizer, providing the parameter bounds is essential. </p>
+<div class="admonition warning">
+<p class="admonition-title">Parameter order must match bounds</p>
+<p>The order of parameters in bounds must exactly match the order in which parameters are unpacked inside the <code>negative_log_likelihood</code> function. <strong>A mismatch will lead to incorrect estimation.</strong></p>
+</div>
 <div class="highlight"><pre><span></span><code><span class="c1"># Parameter bounds</span>
 <span class="n">bounds</span> <span class="o">=</span> <span class="p">[</span>
     <span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span>   <span class="c1"># threshold</span>
@@ -949,23 +1091,37 @@
 
 <span class="n">param_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;threshold&quot;</span><span class="p">,</span> <span class="s2">&quot;ndt&quot;</span><span class="p">,</span> <span class="s2">&quot;drift_x&quot;</span><span class="p">,</span> <span class="s2">&quot;drift_y&quot;</span><span class="p">]</span>
 
+
 <span class="n">result</span> <span class="o">=</span> <span class="n">differential_evolution</span><span class="p">(</span>
     <span class="n">negative_log_likelihood</span><span class="p">,</span>
     <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span>
-    <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">sim_data</span><span class="p">[</span><span class="s2">&quot;rt&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">sim_data</span><span class="p">[</span><span class="s2">&quot;response&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">model</span><span class="p">),</span>
+    <span class="n">args</span><span class="o">=</span><span class="p">(</span>
+        <span class="n">sim_data</span><span class="p">[</span><span class="s2">&quot;rt&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> 
+        <span class="n">sim_data</span><span class="p">[</span><span class="s2">&quot;response&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> 
+        <span class="n">model</span>
+    <span class="p">),</span>
 <span class="p">)</span>
 </code></pre></div>
-<hr />
-<h2 id="6-inspect-recovered-parameters">6. Inspect recovered parameters</h2>
+<p>The optimization result contains:</p>
+<ul>
+<li><code>result.x</code>: the optimized parameter values  </li>
+<li><code>result.fun</code> - the optimized negative log-likelihood value, </li>
+</ul>
+<p><code>result.fun</code> can be used for calculating the goodness-of-fit metrics like AIC or BIC.</p>
+<h2 id="7-inspect-recovered-parameters">7. Inspect recovered parameters</h2>
 <div class="highlight"><pre><span></span><code><span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">param_names</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div>
+<div class="highlight"><pre><span></span><code>threshold: 1.939
+ndt: 0.276
+drift_x: 1.899
+drift_y: 0.028
+</code></pre></div>
 <p>The recovered parameters should be close to the values used for simulation, demonstrating correct likelihood evaluation and parameter recovery.</p>
-<hr />
 <h2 id="notes">Notes</h2>
 <ul>
-<li>This example uses a <strong>fixed decision threshold</strong>.</li>
-<li>Other threshold dynamics and response spaces (e.g., spherical or hyperspherical models) follow the same workflow.</li>
+<li>Collapsing thresholds (<code>'linear'</code>, <code>'exponential'</code>, <code>'hyperbolic'</code>) follow the same workflow.</li>
+<li>Other response geometries (e.g., projected spherical or hyperspherical models) use the same estimation structure.</li>
 </ul>
 
 

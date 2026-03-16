@@ -14,7 +14,7 @@
       
       
       
-        <link rel="next" href="installation/">
+        <link rel="next" href="usage/">
       
       
         
@@ -196,6 +196,25 @@
     
   
   Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="usage/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Usage
 
       </a>
     </li>
@@ -447,6 +466,33 @@
   
   
     <li class="md-nav__item">
+      <a href="usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="installation/" class="md-nav__link">
         
   
@@ -489,10 +535,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -510,8 +556,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -809,13 +855,28 @@
 <p>CRDDM is a Python package for modeling continuous-response decision tasks using <strong>Continuous-Response Diffusion Decision Models (CRDDM)</strong>.</p>
 <p>The package provides fast and numerically stable likelihood evaluation for continuous-response diffusion models based on the integral equation method proposed by <a href="https://doi.org/10.3758/s13428-025-02810-3">Hadian Rasanan et al. (2025)</a>. </p>
 <p>CRDDM is designed for researchers in <strong>cognitive science</strong>, <strong>mathematical psychology</strong>, and <strong>neuroscience</strong> who study decision-making with continuous-response spaces. </p>
+<div class="admonition note">
+<p class="admonition-title">Required data: response time and response location</p>
+<p>CRDDM implements diffusion-based models that jointly explain <strong>response times</strong> and
+<strong>continuous response locations</strong>. To use these models appropriately, your dataset must include:</p>
+<ul>
+<li>a response time (RT) for each decision, and  </li>
+<li>a continuous response value (e.g., angle, position, 2D coordinate) for each decision.</li>
+</ul>
+<p>These models are designed for tasks in which response times reflect the dynamics of
+evidence accumulation. If response times are not recorded, are heavily constrained by the task
+design (e.g., delayed response prompts, fixed response windows), or are not theoretically
+meaningful measures of decision latency, diffusion-based modeling may not be appropriate.</p>
+<p>In such cases, models that focus solely on response error distributions (e.g., descriptive or
+static mixture models) may be more suitable.</p>
+</div>
 <h2 id="features"><strong>Features</strong></h2>
 <p><strong>1. Support for diverse continuous response scales:</strong></p>
 <p>CRDDM supports a wide range of continuous-response scales commonly used in experimental research, including:</p>
 <ul>
-<li>Bounded one-dimensional scales (e.g., arcs or sliders),</li>
-<li>Circular scales (e.g., color wheels),</li>
-<li>Two-dimensional scales (e.g., 2D planes).</li>
+<li>Circular scales (e.g., panels a, b, and c),</li>
+<li>Bounded one-dimensional scales (e.g., panels d and e),</li>
+<li>Two-dimensional scales (e.g., panel f).</li>
 </ul>
 <p>Examples of continuous-response decision tasks are illustrated below:</p>
 <p><img alt="Examples of continuous-report decision tasks." src="imgs/Continuous_tasks.png" title="Examples of continuous-report decision tasks." /></p>
@@ -833,16 +894,16 @@
 <h2 id="diffusion-models-of-continuous-response-taks"><strong>Diffusion models of continuous-response taks</strong></h2>
 <p>CRDDM includes four classes of multi-dimensional diffusion models, tailored to different response geometries:</p>
 <ul>
-<li><strong>Circular Diffusion Models</strong> for experiments with circular response scales,</li>
-<li><strong>(Hyper-)Spherical Diffusion Models</strong> for experiments with circular response scales,</li>
-<li><strong>Projected Spherical Diffusion Models</strong> for experiments with one-dimensional bounded scales,</li>
-<li><strong>Projected Hyper-spherical Diffusion Models</strong> for experiments with two-dimensional bounded scales.</li>
+<li><strong>Circular Diffusion Models</strong> for experiments with circular response scales (e.g., panels a, b, and c in figure above),</li>
+<li><strong>(Hyper-)Spherical Diffusion Models</strong> for experiments with circular response scales (e.g., panels a, b, and c in figure above),</li>
+<li><strong>Projected Spherical Diffusion Models</strong> for experiments with one-dimensional bounded scales (e.g., panels d and e in figure above),</li>
+<li><strong>Projected Hyper-spherical Diffusion Models</strong> for experiments with two-dimensional bounded scales (e.g., panel f in figure above).</li>
 </ul>
 <p><img alt="Diffusion models of continuous response tasks." src="imgs/Diffusion_models.png" title="Diffusion models of continuous response tasks." /></p>
 <hr />
 <h2 id="credits"><strong>Credits</strong></h2>
 <p>This package was developed by me, <a href="https://scholar.google.com/citations?hl=en&amp;user=qbOoaykAAAAJ">Amir Hosein Hadian Rasanan</a>,
-with getting support from <a href="https://scholar.google.com/citations?user=2hG7r90AAAAJ&amp;hl=en">Dr. Nathan J Evans</a> and <a href="https://scholar.google.com/citations?user=6Y5X1xUAAAAJ&amp;hl=en">Prof. Dr. Jörg Rieskamp</a>. </p>
+with support from <a href="https://scholar.google.com/citations?user=2hG7r90AAAAJ&amp;hl=en">Dr. Nathan J Evans</a> and <a href="https://scholar.google.com/citations?user=6Y5X1xUAAAAJ&amp;hl=en">Prof. Dr. Jörg Rieskamp</a>. </p>
 <p>When using this package or part of the code for your own research, I ask you to cite us:</p>
 <blockquote>
 <p>Hadian Rasanan, A. H., Evans, N. J., and Rieskamp, J. (in prepration). Modeling Continuous-response Decisions with Multi-dimensional Diffusion Processes: A Tutorial</p>
