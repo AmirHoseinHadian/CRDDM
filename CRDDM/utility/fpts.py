@@ -4,8 +4,8 @@ from numba import jit
 from scipy.special import iv, ive
 
 from CRDDM.utility.helpers import iv_numba, ive_numba
-from CRDDM.utility.Constants import zeros_0, zeros_1
-from CRDDM.utility.Constants import JVZ1, JVZ2
+from CRDDM.utility.Constants import zeros_0, zeros_1, zeros_5
+from CRDDM.utility.Constants import JVZ1, JVZ2, JVZ5
 
 # The firs-passage time distribution of zero-drift process for small RTs
 @jit(nopython=True)
@@ -20,7 +20,7 @@ def cdm_long_t_fpt_z(t, threshold, sigma=1):
     fpt_z = np.zeros(t.shape)
     for i in range(t.shape[0]):
         series = np.sum((zeros_0/JVZ1) * np.exp(-(zeros_0**2 * sigma**2)/(2*threshold**2)*t[i]))
-        fpt_z[i] = sigma**2/threshold**2 * series
+        fpt_z[i] = sigma**2/(threshold**2 * 2 * np.pi) * series
     return fpt_z
 
 # The firs-passage time distribution of zero-drift process for small RTs
@@ -36,7 +36,7 @@ def hsdm_long_t_fpt_z(t, threshold, sigma=1):
     fpt_z = np.zeros(t.shape)
     for i in range(t.shape[0]):
         series = np.sum((zeros_1**2/JVZ2) * np.exp(-(zeros_1**2 * sigma**2)/(2*threshold**2)*t[i]))
-        fpt_z[i] = sigma**2/(threshold**2) * series
+        fpt_z[i] = sigma**2/(threshold**2 * 2**2 * np.pi**2) * series
     return fpt_z
 
 # The firs-passage time distribution of zero-drift process for small RTs
@@ -50,9 +50,9 @@ def sdm_short_t_fpt_z(t, x):
 @jit(nopython=True)
 def sdm_long_t_fpt_z(t, threshold, sigma=1, max_n=500):
     fpt_z = np.zeros(t.shape)
-    for n in range(1, max_n):
-        s = (-1)**(n+1) * n**2 * np.exp(- (n**2 * np.pi**2 * t)/(2*threshold**2))
-        fpt_z += np.pi**2/threshold**2 * s
+    for i in range(t.shape[0]):
+        series = np.sum((zeros_5**1.5/JVZ5) * np.exp(-(zeros_5**2 * sigma**2)/(2*threshold**2)*t[i]))
+        fpt_z[i] = sigma**2/(threshold**2 * 2**1.5 * np.pi**1.5) * series
     return fpt_z
 
 
