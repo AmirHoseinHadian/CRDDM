@@ -200,7 +200,7 @@ class SphericalDiffusionModel:
                 # No non-decision time variability
                 term1 = a * (mu_dot_x0 + mu_dot_x1 + mu_dot_x2) / sigma**2
                 term2 = 0.5 * (drift_vec[:, 0]**2 + drift_vec[:, 1]**2 + drift_vec[:, 2]**2) * tt / sigma**2
-                log_density = term1 - term2 + np.log(fpt_z) #- np.log(4*np.pi)
+                log_density = term1 - term2 + np.log(fpt_z) - 1.5*np.log(2*np.pi)
             else:
                 # With non-decision time variability
                 log_density = np.log(0.1**14) * np.ones(rt.shape[0])
@@ -212,19 +212,19 @@ class SphericalDiffusionModel:
                     if tt[i] - s_t > 0:
                         if self.threshold_dynamic == 'fixed':
                             integrand = np.exp(- 0.5 * norm2_drift[i] * (tt[i] - eps)/sigma**2) * np.interp(tt[i]-eps, T, fpt_z)/s_t
-                            density = np.exp(threshold * mu_dot_x[i]) * trapz_1d(integrand, eps)
+                            density = np.exp(threshold * mu_dot_x[i]) * trapz_1d(integrand, eps) * (0.5/np.pi)**1.5
                         elif self.threshold_dynamic == 'linear':
                             integrand = np.exp((threshold - decay * (tt[i] - eps)) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)/sigma**2) * np.interp(tt[i]-eps, T, fpt_z)/s_t
-                            density = trapz_1d(integrand, eps)
+                            density = trapz_1d(integrand, eps) * (0.5/np.pi)**1.5
                         elif self.threshold_dynamic == 'exponential':
                             integrand = np.exp(threshold*np.exp(-decay * (tt[i] - eps)) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)/sigma**2) * np.interp(tt[i]-eps, T, fpt_z)/s_t
-                            density = trapz_1d(integrand, eps)
+                            density = trapz_1d(integrand, eps) * (0.5/np.pi)**1.5
                         elif self.threshold_dynamic == 'hyperbolic':
                             integrand = np.exp(threshold/(1  + decay * (tt[i] - eps)) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)/sigma**2) * np.interp(tt[i]-eps, T, fpt_z)/s_t
-                            density = trapz_1d(integrand, eps)
+                            density = trapz_1d(integrand, eps) * (0.5/np.pi)**1.5
                         elif self.threshold_dynamic == 'custom':
                             integrand = np.exp(threshold_function(tt[i] - eps) * mu_dot_x[i] - 0.5 * norm2_drift[i] * (tt[i] - eps)/sigma**2) * np.interp(tt[i]-eps, T, fpt_z)/s_t
-                            density = trapz_1d(integrand, eps)
+                            density = trapz_1d(integrand, eps) * (0.5/np.pi)**1.5
                         
                         if density > 0.1**14:
                             log_density[i] = np.log(density)
@@ -240,7 +240,7 @@ class SphericalDiffusionModel:
                 exponent0 = -0.5*drift_vec[:, 0]**2/s_v2 + 0.5*(x0 * s_v2/sigma**2 + drift_vec[:, 0])**2 / (s_v2 * (s_v2/sigma**2 * tt + 1))
                 exponent1 = -0.5*drift_vec[:, 1]**2/s_v2 + 0.5*(x1 * s_v2/sigma**2 + drift_vec[:, 1])**2 / (s_v2 * (s_v2/sigma**2 * tt + 1))
                 exponent2 = -0.5*drift_vec[:, 2]**2/s_v2 + 0.5*(x2 * s_v2/sigma**2 + drift_vec[:, 2])**2 / (s_v2 * (s_v2/sigma**2 * tt + 1))
-                log_density = 3*np.log(fixed) + exponent0 + exponent1 + exponent2 + np.log(fpt_z) #- np.log(4*np.pi)
+                log_density = 3*np.log(fixed) + exponent0 + exponent1 + exponent2 + np.log(fpt_z) - 1.5*np.log(2*np.pi)
             else:
                 log_density = np.log(0.1**14) * np.ones(rt.shape[0])
                 eps = np.linspace(0, s_t, max(2, int(s_t//0.02)))
@@ -273,7 +273,7 @@ class SphericalDiffusionModel:
                         exponent2 = -0.5*drift_vec[i, 2]**2/s_v2 + 0.5*(x2 * s_v2/sigma**2 + drift_vec[i, 2])**2 / (s_v2 * (s_v2/sigma**2 * (tt[i] - eps) + 1))
 
                         integrand = fixed**3 * np.exp(exponent0 + exponent1 + exponent2) * np.interp(tt[i]-eps, T, fpt_z)/s_t
-                        density = trapz_1d(integrand, eps)
+                        density = trapz_1d(integrand, eps) * (0.5/np.pi)**1.5
                         if density > 0.1**14:
                             log_density[i] = np.log(density)
 
